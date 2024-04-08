@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 public class Logiciel {
     private Stage stage;
     private Label bienvenue = new Label("Bienvenue sur le logiciel ESCRIM");
-    private Image imagePresentation = new Image("file:///C:/Users/lucie/Documents/EMA/2A/2IA/Cas d'étude/guerre.jpg");
+    private Image imagePresentation = new Image("file:ressources/guerre.jpg");
     private ImageView vueImage;
     private Button boutonLancerCalcul;
     private Button boutonIdentifier;
