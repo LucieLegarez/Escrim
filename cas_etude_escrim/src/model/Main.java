@@ -11,6 +11,11 @@ public class Main extends Application {
         try {
             this.logiciel = new Logiciel(primaryStage);
             this.logiciel.afficheVueAccueil();
+            
+            BDD database = new BDD();
+            database.openDBConnection();
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
