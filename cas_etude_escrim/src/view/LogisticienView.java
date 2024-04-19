@@ -28,6 +28,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import model.BDD;
+import javafx.scene.control.DatePicker;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 
 /**
  * Classe représentant la vue du logisticien.
@@ -39,6 +42,12 @@ public class LogisticienView extends Stage {
 			"NUM_CAISSE", "CAISSE" };
 	private final BDD bdd;
 	private ObservableList<String[]> stocksMedicaments;
+	private List<String> produit;
+	private List<String> dci;
+	private List<String> dosage;
+	private List<String> classe;
+	private List<String> caisse;
+	private Label successMessageLabel;
 
 	/**
 	 * Constructeur de la vue du logisticien.
@@ -48,6 +57,11 @@ public class LogisticienView extends Stage {
 	public LogisticienView(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		this.bdd = new BDD();
+		this.produit = new ArrayList<>();
+		this.dci = new ArrayList<>();
+		this.dosage = new ArrayList<>();
+		this.classe = new ArrayList<>();
+		this.caisse = new ArrayList<>();
 	}
 
 	/**
@@ -55,6 +69,7 @@ public class LogisticienView extends Stage {
 	 */
 	public void afficheVueLogisticien() {
 		GridPane mainPane = createMainPane();
+		mainPane.getChildren().clear();
 		addBackButton(mainPane);
 
 		List<String[]> stocksMedicamentsList = bdd.recupererStocksMedicaments();
@@ -174,11 +189,15 @@ public class LogisticienView extends Stage {
 	 */
 	public List<String> generateLowStockMessages(Map<String, Integer> stockGrouped) {
 		List<String> lowStockMessages = new ArrayList<>();
+		List<String> information = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : stockGrouped.entrySet()) {
 			if (entry.getValue() < 10) {
+				int a= 10 - entry.getValue();
 				String[] keyParts = entry.getKey().split("-");
-				String message = "• Le stock de " + keyParts[0] + " avec un dosage de " + keyParts[2]
-						+ " est insuffisant.";
+				produit.add(keyParts[0]);
+				dci.add(keyParts[1]);
+				dosage.add(keyParts[2]);
+				String message = "• Il manque au stock au moins " + a + " " + keyParts[0] + " avec un dosage de " + keyParts[2];
 				lowStockMessages.add(message);
 			}
 		}
@@ -192,34 +211,36 @@ public class LogisticienView extends Stage {
 	 * @param lowStockMessages La liste de messages de stock bas.
 	 */
 	public void displayLowStockMessages(GridPane mainPane, List<String> lowStockMessages) {
-		if (!lowStockMessages.isEmpty()) {
-			Label nouveauxMessagesLabel = new Label("Nouveaux messages:");
-			nouveauxMessagesLabel.setFont(Font.font("Arial", 18));
-			nouveauxMessagesLabel.setStyle("-fx-underline: true;");
-			mainPane.add(nouveauxMessagesLabel, 0, 1);
-			GridPane.setMargin(nouveauxMessagesLabel, new Insets(10));
+	    if (!lowStockMessages.isEmpty()) {
+	        Label nouveauxMessagesLabel = new Label("Nouveaux messages:");
+	        nouveauxMessagesLabel.setFont(Font.font("Arial", 18));
+	        nouveauxMessagesLabel.setStyle("-fx-underline: true;");
+	        mainPane.add(nouveauxMessagesLabel, 0, 1);
+	        GridPane.setMargin(nouveauxMessagesLabel, new Insets(10));
 
-			int rowIndex = 3;
+	        int rowIndex = 3;
 
-			for (String message : lowStockMessages) {
-				Label messageLabel = new Label(message);
-				messageLabel.setTextFill(Color.RED);
-				messageLabel.setWrapText(true);
-				mainPane.add(messageLabel, 0, rowIndex);
-				GridPane.setMargin(messageLabel, new Insets(5, 10, 5, 10));
+	        for (int i = 0; i < lowStockMessages.size(); i++) {
+	            String message = lowStockMessages.get(i);
+	            Label messageLabel = new Label(message);
+	            messageLabel.setTextFill(Color.RED);
+	            messageLabel.setWrapText(true);
+	            mainPane.add(messageLabel, 0, rowIndex);
+	            GridPane.setMargin(messageLabel, new Insets(5, 10, 5, 10));
 
-				Spinner<Integer> quantitySpinner = createQuantitySpinner();
-				mainPane.add(quantitySpinner, 1, rowIndex);
+	            Spinner<Integer> quantitySpinner = createQuantitySpinner();
+	            mainPane.add(quantitySpinner, 1, rowIndex);
 
-				Button orderButton = createOrderButton(message, quantitySpinner);
-				mainPane.add(orderButton, 2, rowIndex);
+	            Button orderButton = createOrderButton(message, quantitySpinner, i);  // Pass current index
+	            mainPane.add(orderButton, 2, rowIndex);
 
-				setButtonLayout(quantitySpinner, orderButton);
+	            setButtonLayout(quantitySpinner, orderButton);
 
-				rowIndex++;
-			}
-		}
+	            rowIndex++;
+	        }
+	    }
 	}
+
 
 	/**
 	 * Crée un spinner pour sélectionner la quantité.
@@ -239,7 +260,7 @@ public class LogisticienView extends Stage {
 
 		return quantitySpinner;
 	}
-
+	
 	/**
 	 * Crée un bouton de commande.
 	 *
@@ -247,15 +268,59 @@ public class LogisticienView extends Stage {
 	 * @param quantitySpinner Le spinner de quantité associé à la commande.
 	 * @return Le bouton de commande créé.
 	 */
-	public Button createOrderButton(String message, Spinner<Integer> quantitySpinner) {
-		Button orderButton = new Button("Buy");
-		orderButton.setOnAction(event -> {
-			int quantity = quantitySpinner.getValue();
-			// A COMPLETER
-		});
-		return orderButton;
+	public Button createOrderButton(String message, Spinner<Integer> quantitySpinner, int index) {
+	    Button orderButton = new Button("Buy");
+	    orderButton.setOnAction(event -> {
+	        int quantity = quantitySpinner.getValue();
+	        Stage popupStage = new Stage();
+	        popupStage.initModality(Modality.APPLICATION_MODAL);
+	        popupStage.setTitle("Saisir les informations du médicament");
+
+	        DatePicker datePicker = new DatePicker();
+	        TextField lotTextField = new TextField();
+	        TextField numCaisseTextField = new TextField();
+	        TextField caisseTextField = new TextField();
+	        TextField classeTextField = new TextField();
+
+	        GridPane gridPane = new GridPane();
+	        gridPane.setVgap(10);
+	        gridPane.setHgap(10);
+	        gridPane.addRow(0, new Label("Date limite :"), datePicker);
+	        gridPane.addRow(1, new Label("Numéro de lot :"), lotTextField);
+	        gridPane.addRow(2, new Label("Numéro de caisse :"), numCaisseTextField);
+	        gridPane.addRow(3, new Label("Nom de la caisse :"), caisseTextField);
+	        gridPane.addRow(4, new Label("Nom de la classe :"), classeTextField);
+
+	        Button validerButton = new Button("Valider");
+	        validerButton.setOnAction(e -> {
+	            LocalDate dateLimite = datePicker.getValue();
+	            String lot = lotTextField.getText();
+	            String numCaisse = numCaisseTextField.getText();
+	            String classe = classeTextField.getText();
+	            String caisse = caisseTextField.getText();
+	            String produit = this.produit.get(index);
+	            String dci = this.dci.get(index);
+	            String dosage = this.dosage.get(index);
+
+	            // Insert into the database
+	            bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
+	                // Close the pop-up
+	                popupStage.close();
+	                
+	                // Refresh the logistician view to reflect the updated stock
+	                afficheVueLogisticien();
+	            
+	        });
+
+	        gridPane.addRow(6, validerButton);
+
+	        popupStage.setScene(new Scene(gridPane, 300, 200));
+	        popupStage.showAndWait();
+	    });
+	    return orderButton;
 	}
 
+	
 	/**
 	 * Définit la disposition des éléments dans le panneau principal.
 	 *
@@ -346,6 +411,7 @@ public class LogisticienView extends Stage {
 		return searchField;
 	}
 
+	
 	/**
 	 * Crée et retourne un bouton de retour vers la vue du logisticien.
 	 *
@@ -365,4 +431,5 @@ public class LogisticienView extends Stage {
 		return backButton;
 	}
 
+	
 }

@@ -53,7 +53,7 @@ public class AjoutUtilisateur extends Stage {
         mdp = new Label("Mot de passe :");
         mdpInfo = new Label("(doit contenir au moins 5 caractères)");
         dateNaissance = new Label("Date de naissance :");
-        dateInfo = new Label("(au format DD-MM-YYYY)");
+        dateInfo = new Label("(au format DD/MM/YYYY)");
         statut = new Label("Statut :");
         erreur = new Label();
         boutonAjouter = new Button("Ajouter");

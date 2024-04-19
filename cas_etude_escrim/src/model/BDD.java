@@ -211,4 +211,27 @@ public class BDD {
 		}
 	}
 
+	public void insererMedicament(String produit, String dci, String dosage, LocalDate dateLimite, int quantity, String lot, String classe, String numCaisse, String caisse) {
+	    try {
+	        PreparedStatement insertionMedicament = dbConnection.prepareStatement(
+	            "INSERT INTO médicament (PRODUIT, DCI, DOSAGE, DLU, QUANTITÉ, LOT, CLASSE, NUM_CAISSE, CAISSE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	        insertionMedicament.setString(1, produit);
+	        insertionMedicament.setString(2, dci);
+	        insertionMedicament.setString(3, dosage);
+	        insertionMedicament.setDate(4, Date.valueOf(dateLimite));
+	        insertionMedicament.setInt(5, quantity);
+	        insertionMedicament.setString(6, lot);
+	        insertionMedicament.setString(7, classe);
+	        insertionMedicament.setString(8, numCaisse);
+	        insertionMedicament.setString(9, caisse);
+
+	        System.out.println("Executing query: " + insertionMedicament);
+	        int result = insertionMedicament.executeUpdate();
+	        System.out.println("Result: " + result);
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+
 }
