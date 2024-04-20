@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 import model.BDD;
 import view.BlesseView;
 import view.LogisticienView;
+import view.MedecinView;
 
 /**
  * Contrôleur pour la gestion de la connexion utilisateur.
@@ -84,7 +85,7 @@ public class ConnexionController implements EventHandler<ActionEvent> {
              Date dateAttentat = Date.valueOf(utilisateur[7].trim());
             afficherVueBlesse(prenom, nom, dateNaissance, lieuAttentat, dateAttentat);
         } else if ((utilisateur[5].trim()).equals("Médecin")) {
-            // A COMPLETER
+            afficherVueMedecin();
         } else if ((utilisateur[5].trim()).equals("Logisticien")) {
             afficherVueLogisticien();
         }
@@ -117,6 +118,29 @@ public class ConnexionController implements EventHandler<ActionEvent> {
 
         new Thread(pauseTask).start();
     }
+    
+    public void afficherVueMedecin() {
+        Task<Void> pauseTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                Thread.sleep(1000);
+                return null;
+            }
+        };
+
+        pauseTask.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+            @Override
+            public void handle(WorkerStateEvent event) {
+                primaryStage.close();
+                MedecinView medView = new MedecinView(primaryStage);
+                medView.afficheVueMedecin();
+            }
+        });
+
+        new Thread(pauseTask).start();
+    }
+
+    
 
     /**
      * Affiche la vue pour un logisticien.

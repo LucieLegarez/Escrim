@@ -266,5 +266,43 @@ public class BDD {
 	        e.printStackTrace();
 	    }
 	}
+
+	public void insererPrescription(String prenom, String nom, String medecin, String nom_medicament, int quantity, LocalDate date_pres) {
+	    try {
+	        PreparedStatement insertionPrescription = dbConnection.prepareStatement(
+	            "INSERT INTO prescription (PRENOM, NOM, MEDECIN, NOM_MEDCIAMENT, QUANTITÉ, DATE_PRES) VALUES (?, ?, ?, ?, ?, ?)");
+	        insertionPrescription.setString(1, prenom);
+	        insertionPrescription.setString(2, nom);
+	        insertionPrescription.setString(3, medecin);
+	        insertionPrescription.setString(4, nom_medicament);
+	        insertionPrescription.setInt(5, quantity);
+	        insertionPrescription.setDate(6, Date.valueOf(date_pres));
+
+	        System.out.println("Executing query: " + insertionPrescription);
+	        int result = insertionPrescription.executeUpdate();
+	        System.out.println("Result: " + result);
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+	public List<String[]> recupererListeAttentat() {
+		List<String[]> listeAttentats = new ArrayList<>();
+		try {
+			PreparedStatement statement = dbConnection.prepareStatement(
+					"SELECT lieu, Tot_blessés, Pers_à_soigner, date_evenement FROM attentat");
+			ResultSet resultSet = statement.executeQuery();
+			while (resultSet.next()) {
+				String[] attentat = new String[4];
+				for (int i = 0; i < 4; i++) {
+					attentat[i] = resultSet.getString(i + 1);
+				}
+				listeAttentats.add(attentat);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return listeAttentats;
+	}
 	
 }

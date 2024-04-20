@@ -597,6 +597,8 @@ public class LogisticienView extends Stage {
 		});
 		return backButton;
 	}
-
+	
+	
+	
 }
 
