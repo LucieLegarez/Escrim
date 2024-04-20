@@ -50,7 +50,7 @@ public class BDD {
 	public void prepareStatements() {
 		try {
 			insertionUtilisateur = dbConnection.prepareStatement(
-					"INSERT INTO personne (identifiant, prénom, nom, date_naissance, mdp, statut ) VALUES (?, ?, ?, ?, ?, ?)");
+					"INSERT INTO personne (identifiant, prénom, nom, date_naissance, mdp, statut, lieuAttentat, dateAttentat ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 			selectionUtilisateurParNom = dbConnection.prepareStatement("SELECT * FROM personne WHERE identifiant = ?");
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -68,7 +68,7 @@ public class BDD {
 	 * @param statut        Statut de l'utilisateur.
 	 */
 	public void insererUtilisateur(String identifiant, String prenom, String nom, LocalDate dateNaissance, String mdp,
-			String statut) {
+			String statut, String lieuAttentat, LocalDate dateAttentat) {
 		try {
 			insertionUtilisateur.setString(1, identifiant);
 			insertionUtilisateur.setString(2, prenom);
@@ -76,6 +76,8 @@ public class BDD {
 			insertionUtilisateur.setDate(4, Date.valueOf(dateNaissance));
 			insertionUtilisateur.setString(5, mdp);
 			insertionUtilisateur.setString(6, statut);
+			insertionUtilisateur.setString(7, lieuAttentat);
+			insertionUtilisateur.setDate(8, Date.valueOf(dateAttentat));
 			insertionUtilisateur.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -90,10 +92,10 @@ public class BDD {
 	 *         existe, sinon un tableau vide.
 	 */
 	public String[] stockerUtilisateurParIdentifiant(String identifiant) {
-		String[] res = new String[6];
+		String[] res = new String[8];
 		try {
 			PreparedStatement selectionUtilisateurParIdentifiant = dbConnection.prepareStatement(
-					"SELECT identifiant, `prénom`, nom,  date_naissance, mdp, statut FROM personne WHERE identifiant = ?");
+					"SELECT identifiant, `prénom`, nom,  date_naissance, mdp, statut, lieuAttentat, dateAttentat FROM personne WHERE identifiant = ?");
 			selectionUtilisateurParIdentifiant.setString(1, identifiant);
 			ResultSet rs = selectionUtilisateurParIdentifiant.executeQuery();
 			boolean existe = false;
@@ -104,6 +106,8 @@ public class BDD {
 				res[3] = rs.getDate("date_naissance").toString();
 				res[4] = rs.getString("mdp");
 				res[5] = rs.getString("statut");
+				res[6] = rs.getString("lieuAttentat");
+				res[7] = rs.getDate("dateAttentat").toString();
 
 			}
 			res[0] = String.valueOf(existe);

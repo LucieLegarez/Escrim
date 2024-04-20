@@ -28,6 +28,7 @@ public class BlesseView extends Stage {
 	private Label fichePatient;
 	private String prenom;
 	private String nom;
+	private String lieuAttentat;
 	private Label titre;
 
 	/**
@@ -50,14 +51,16 @@ public class BlesseView extends Stage {
      * @param nom           Le nom du blessé.
      * @param dateNaissance La date de naissance du blessé.
      */
-    public void afficheVueBlesse(String prenom, String nom, Date dateNaissance) {
+    public void afficheVueBlesse(String prenom, String nom, Date dateNaissance, String lieuAttentat, Date dateAttentat) {
         this.prenom = prenom;
         this.nom = nom;
         this.titre.setText("Fiche de " + prenom + " " + nom);
+        this.lieuAttentat = lieuAttentat;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String dateNaissanceFormatted = dateNaissance.toLocalDate().format(formatter);
-
-        GridPane infosPane = createInfosPane(dateNaissanceFormatted);
+        String dateAttentatFormatted = dateAttentat.toLocalDate().format(formatter);
+        
+        GridPane infosPane = createInfosPane(dateNaissanceFormatted, dateAttentatFormatted);
         GridPane patientPane = createPatientPane();
         Line line = createLine();
 
@@ -73,7 +76,7 @@ public class BlesseView extends Stage {
      * @param dateNaissanceFormatted La date de naissance du blessé formatée.
      * @return Le panneau d'informations créé.
      */
-    public GridPane createInfosPane(String dateNaissanceFormatted) {
+    public GridPane createInfosPane(String dateNaissanceFormatted, String dateAttentatFormatted) {
         GridPane infosPane = new GridPane();
         infosPane.setPadding(new Insets(10));
         infosPane.setVgap(10);
@@ -108,6 +111,16 @@ public class BlesseView extends Stage {
         dateNaissanceLabel.setFont(Font.font("Arial", 15));
         GridPane.setColumnSpan(dateNaissanceLabel, GridPane.REMAINING);
         infosPane.add(dateNaissanceLabel, 0, 6);
+        
+        Label lieuLabel = new Label("Lieu de l'attentat : " + lieuAttentat);
+        lieuLabel.setFont(Font.font("Arial", 15));
+        GridPane.setColumnSpan(lieuLabel, GridPane.REMAINING);
+        infosPane.add(lieuLabel, 0, 7);
+        
+        Label dateAttentatLabel = new Label("Date de l'attentat : " + dateAttentatFormatted);
+        dateAttentatLabel.setFont(Font.font("Arial", 15));
+        GridPane.setColumnSpan(dateAttentatLabel, GridPane.REMAINING);
+        infosPane.add(dateAttentatLabel, 0, 8);
 
         return infosPane;
     }

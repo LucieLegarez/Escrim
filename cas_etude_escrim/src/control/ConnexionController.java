@@ -77,9 +77,12 @@ public class ConnexionController implements EventHandler<ActionEvent> {
         String prenom = utilisateur[1].trim();
         String nom = utilisateur[2].trim();
         Date dateNaissance = Date.valueOf(utilisateur[3].trim());
-
+       
+        
         if ((utilisateur[5].trim()).equals("Blessé")) {
-            afficherVueBlesse(prenom, nom, dateNaissance);
+        	 String lieuAttentat = utilisateur[6].trim();
+             Date dateAttentat = Date.valueOf(utilisateur[7].trim());
+            afficherVueBlesse(prenom, nom, dateNaissance, lieuAttentat, dateAttentat);
         } else if ((utilisateur[5].trim()).equals("Médecin")) {
             // A COMPLETER
         } else if ((utilisateur[5].trim()).equals("Logisticien")) {
@@ -94,7 +97,7 @@ public class ConnexionController implements EventHandler<ActionEvent> {
      * @param nom Nom de l'utilisateur
      * @param dateNaissance Date de naissance de l'utilisateur
      */
-    public void afficherVueBlesse(String prenom, String nom, Date dateNaissance) {
+    public void afficherVueBlesse(String prenom, String nom, Date dateNaissance, String lieuAttentat, Date dateAttentat) {
         Task<Void> pauseTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
@@ -108,7 +111,7 @@ public class ConnexionController implements EventHandler<ActionEvent> {
             public void handle(WorkerStateEvent event) {
                 primaryStage.close();
                 BlesseView blesseView = new BlesseView(primaryStage);
-                blesseView.afficheVueBlesse(prenom, nom, dateNaissance);
+                blesseView.afficheVueBlesse(prenom, nom, dateNaissance, lieuAttentat, dateAttentat);
             }
         });
 

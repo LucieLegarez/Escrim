@@ -25,6 +25,8 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
     private TextField textMdp;
     private DatePicker datePicker;
     private ComboBox<String> statutComboBox;
+    private TextField lieuAt;
+    private DatePicker dateAt;
     private Label erreur;
     private Stage primaryStage;
 
@@ -40,12 +42,14 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
      * @param primaryStage Stage principal de l'application
      */
     public AjouterUtilisateurController(TextField textPrenom, TextField textNom, TextField textMdp,
-            DatePicker datePicker, ComboBox<String> statutComboBox, Label erreur, Stage primaryStage) {
+            DatePicker datePicker, ComboBox<String> statutComboBox,TextField lieuAt,DatePicker dateAt, Label erreur, Stage primaryStage) {
         this.textPrenom = textPrenom;
         this.textNom = textNom;
         this.textMdp = textMdp;
         this.datePicker = datePicker;
         this.statutComboBox = statutComboBox;
+        this.lieuAt=lieuAt;
+        this.dateAt=dateAt;
         this.erreur = erreur;
         this.primaryStage = primaryStage;
         database = new BDD();
@@ -58,8 +62,11 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         String prenom = textPrenom.getText();
         String nom = textNom.getText();
         String mdp = textMdp.getText();
-        String statut = statutComboBox.getValue();
         LocalDate dateNaissance = datePicker.getValue();
+        String statut = statutComboBox.getValue();
+
+        String lieuAttentat = "Blessé".equals(statut) ? lieuAt.getText() : null;
+        LocalDate dateAttentat = "Blessé".equals(statut) ? dateAt.getValue() : LocalDate.of(1, 1, 1);
 
         if (!validerChamps(prenom, nom, mdp, dateNaissance)) {
             return;
@@ -71,9 +78,10 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         if (!utilisateur[0].equals("false")) {
             afficherErreur("Un utilisateur avec cet identifiant existe déjà.");
         } else {
-            ajouterUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
+            ajouterUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut, lieuAttentat, dateAttentat);
         }
     }
+
 
     /**
      * Valide les champs saisis par l'utilisateur.
@@ -103,6 +111,18 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         if (mdp.length() < 5) {
             afficherErreur("Le mot de passe doit contenir au moins 5 caractères.");
             return false;
+        }
+
+        String statut = statutComboBox.getValue();
+        if ("Blessé".equals(statut)) {
+            if (lieuAt.getText().isEmpty()) {
+                afficherErreur("Le lieu de l'attentat est requis pour les blessés.");
+                return false;
+            }
+            if (dateAt.getValue() == null) {
+                afficherErreur("La date de l'attentat est requise pour les blessés.");
+                return false;
+            }
         }
 
         return true;
@@ -139,8 +159,8 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
      * @param statut Statut de l'utilisateur
      */
     public void ajouterUtilisateur(String identifiant, String prenom, String nom, LocalDate dateNaissance,
-            String mdp, String statut) {
-        database.insererUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
+            String mdp, String statut, String lieuAttentat, LocalDate dateAttentat) {
+        database.insererUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut, lieuAttentat, dateAttentat);
         afficherErreur("Utilisateur " + prenom + " " + nom + " ajouté avec succès");
         erreur.setTextFill(Color.GREEN);
 

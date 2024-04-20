@@ -26,6 +26,8 @@ public class AjoutUtilisateur extends Stage {
     private TextField textMdp;
     private DatePicker datePicker;
     private ComboBox<String> statutComboBox;
+    private TextField textlieuAttentat;
+    private DatePicker dateAttentatP;
     private Label prenom;
     private Label nom;
     private Label mdp;
@@ -33,6 +35,9 @@ public class AjoutUtilisateur extends Stage {
     private Label dateNaissance;
     private Label dateInfo;
     private Label statut;
+    private Label lieuAttentat;
+    private Label dateAttentat;
+    private Label dateInfoAtt;
     private Label erreur;
     private Button boutonAjouter;
     private Stage primaryStage;
@@ -48,6 +53,8 @@ public class AjoutUtilisateur extends Stage {
         textMdp = new TextField();
         datePicker = new DatePicker();
         statutComboBox = new ComboBox<>();
+        textlieuAttentat = new TextField();
+        dateAttentatP = new DatePicker();
         prenom = new Label("Prénom :");
         nom = new Label("Nom :");
         mdp = new Label("Mot de passe :");
@@ -55,6 +62,9 @@ public class AjoutUtilisateur extends Stage {
         dateNaissance = new Label("Date de naissance :");
         dateInfo = new Label("(au format DD/MM/YYYY)");
         statut = new Label("Statut :");
+        lieuAttentat = new Label ("lieu de l'attentat :");
+        dateAttentat = new Label ("Date de l'attentat : ");
+        dateInfoAtt = new Label("(au format DD/MM/YYYY)");
         erreur = new Label();
         boutonAjouter = new Button("Ajouter");
         afficheVueAjoutUtilisateur();
@@ -63,15 +73,30 @@ public class AjoutUtilisateur extends Stage {
     /**
      * Affiche la vue pour ajouter un utilisateur.
      */
-	public void afficheVueAjoutUtilisateur() {
-		this.setTitle("Ajout d'utilisateur");
+    public void afficheVueAjoutUtilisateur() {
+        this.setTitle("Ajout d'utilisateur");
 
-		GridPane grid = new GridPane();
-		grid.setPadding(new Insets(30.0, 30.0, 30.0, 30.0));
-		grid.setVgap(20.0);
-		grid.setHgap(30.0);
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(30.0, 30.0, 30.0, 30.0));
+        grid.setVgap(20.0);
+        grid.setHgap(30.0);
 
-		prenom.setFont(new Font("Arial", 25.0));
+        setupCommonFields(grid); // Setup common fields such as prenom, nom, etc.
+
+        statutComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            updateDynamicFields(grid, newVal); // This method will handle dynamic UI changes
+        });
+
+        setupBackButton(grid); // Setup the back button
+        setupAddButton(grid); // Setup the add button
+
+        Scene scene = new Scene(grid);
+        setScene(scene);
+        show();
+    }
+    
+    private void setupCommonFields(GridPane grid) {
+    	prenom.setFont(new Font("Arial", 25.0));
 		textPrenom.setPromptText("Saisir le prénom de l'utilisateur");
 		textPrenom.setFont(Font.font("Arial", FontPosture.ITALIC, 16.0));
 		grid.add(prenom, 0, 0);
@@ -106,13 +131,38 @@ public class AjoutUtilisateur extends Stage {
 		statut.setFont(new Font("Arial", 25.0));
 		if (statutComboBox.getItems().isEmpty()) {
 			statutComboBox.getItems().addAll("Blessé", "Médecin", "Logisticien");
-			statutComboBox.setValue("Blessé");
+			statutComboBox.setValue("Médecin");
 			statutComboBox.setStyle("-fx-font-size: 16.0;");
 		}
 		grid.add(statut, 0, 4);
 		grid.add(statutComboBox, 1, 4);
+    }
+    
+    private void updateDynamicFields(GridPane grid, String statut) {
+        clearDynamicFields(grid); // First, clear previous dynamic fields if any
 
-		ImageView imageView = new ImageView(new Image("file:ressources/flèche.png"));
+        if ("Blessé".equals(statut)) {
+            lieuAttentat.setFont(new Font("Arial", 25.0));
+            textlieuAttentat.setPromptText("Saisir le lieu de l'attentat");
+            textlieuAttentat.setFont(Font.font("Arial", FontPosture.ITALIC, 16.0));
+            grid.add(lieuAttentat, 0, 5);
+            grid.add(textlieuAttentat, 1, 5);
+            
+            dateAttentat.setFont(new Font("Arial", 25.0));
+            dateAttentatP.setPromptText("Date de l'attentat");
+            dateAttentatP.setStyle("-fx-font-family: Arial; -fx-font-style: italic; -fx-font-size: 16;");
+            grid.add(dateAttentat, 0, 6);
+            grid.add(dateAttentatP, 1, 6);
+        }
+    }
+    
+    private void clearDynamicFields(GridPane grid) {
+        grid.getChildren().removeIf(node -> node == lieuAttentat || node == textlieuAttentat || node == dateAttentat || node == dateAttentatP);
+    }
+		
+		
+    private void setupBackButton(GridPane grid) {
+    	ImageView imageView = new ImageView(new Image("file:ressources/flèche.png"));
 		imageView.setFitWidth(30);
 		imageView.setFitHeight(30);
 
@@ -125,26 +175,28 @@ public class AjoutUtilisateur extends Stage {
 			this.close();
 		});
 
-		grid.add(backButton, 0, 6);
+		grid.add(backButton, 0, 8);
 
 		erreur.setStyle("-fx-text-fill: red;");
 		GridPane.setColumnSpan(erreur, GridPane.REMAINING);
 		GridPane.setMargin(erreur, new Insets(0, 0, 0, 60));
-		grid.add(erreur, 0, 6);
-
-		boutonAjouter.setFont(new Font("Arial", 25.0));
+		grid.add(erreur, 0, 8); 
+    }
+		
+		
+    private void setupAddButton(GridPane grid) {
+    	boutonAjouter.setFont(new Font("Arial", 25.0));
 		boutonAjouter.setStyle("-fx-background-color: blue; -fx-text-fill: white;");
 		GridPane.setHalignment(this.boutonAjouter, HPos.RIGHT);
-		grid.add(boutonAjouter, 1, 5);
+		grid.add(boutonAjouter, 1, 7);
 
 		boutonAjouter.setOnAction((event) -> {
 			AjouterUtilisateurController ajoutController = new AjouterUtilisateurController(textPrenom,
-					textNom, textMdp, datePicker, statutComboBox, erreur, this);
+					textNom, textMdp, datePicker, statutComboBox, textlieuAttentat, dateAttentatP,  erreur, this);
 			ajoutController.handle(event);
 		});
 
-		Scene scene = new Scene(grid);
-		setScene(scene);
-		show();
 	}
+    
+		
 }
