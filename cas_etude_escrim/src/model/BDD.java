@@ -211,7 +211,13 @@ public class BDD {
 		}
 	}
 
-	public void insererMedicament(String produit, String dci, String dosage, LocalDate dateLimite, int quantity, String lot, String classe, String numCaisse, String caisse) {
+	/**
+	 * Permet d'insérer un nouveau médicament dans la base de données.
+	 * 
+	 * @param les nouvelles informations du produits rentrées dans la base de données
+	 * @void Ajoute l'élément à la base de données
+	 */
+	public void insererMedicament(String produit, String dci, String dosage, LocalDate dateLimite, int quantity, String lot, String classe, int numCaisse, String caisse) {
 	    try {
 	        PreparedStatement insertionMedicament = dbConnection.prepareStatement(
 	            "INSERT INTO médicament (PRODUIT, DCI, DOSAGE, DLU, QUANTITÉ, LOT, CLASSE, NUM_CAISSE, CAISSE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -222,7 +228,7 @@ public class BDD {
 	        insertionMedicament.setInt(5, quantity);
 	        insertionMedicament.setString(6, lot);
 	        insertionMedicament.setString(7, classe);
-	        insertionMedicament.setString(8, numCaisse);
+	        insertionMedicament.setInt(8, numCaisse);
 	        insertionMedicament.setString(9, caisse);
 
 	        System.out.println("Executing query: " + insertionMedicament);
@@ -233,5 +239,28 @@ public class BDD {
 	    }
 	}
 
+	/**
+	 * Permet d'insérer les informations de l'attentat dans la base de données.
+	 * 
+	 * @param les nouvelles informations de l'attentat sont rentrées dans la base de données
+	 * @void Ajoute l'évènement à la base de données
+	 */
+	
+	public void insererAttentat(String lieu, int tot_blesses, int pers_à_soigner, LocalDate date_evenement) {
+	    try {
+	        PreparedStatement insertionAttentat = dbConnection.prepareStatement(
+	            "INSERT INTO Attentat (lieu, Tot_blessés, Pers_à_soigner, date_evenement) VALUES (?, ?, ?, ?)");
+	        insertionAttentat.setString(1, lieu);
+	        insertionAttentat.setInt(2, tot_blesses);
+	        insertionAttentat.setInt(3, pers_à_soigner);
+	        insertionAttentat.setDate(4, Date.valueOf(date_evenement));
 
+	        System.out.println("Executing query: " + insertionAttentat);
+	        int result = insertionAttentat.executeUpdate();
+	        System.out.println("Result: " + result);
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
 }

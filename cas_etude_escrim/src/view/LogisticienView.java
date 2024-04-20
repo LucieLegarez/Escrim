@@ -78,7 +78,7 @@ public class LogisticienView extends Stage {
 
 		displayLowStockMessages(mainPane, lowStockMessages);
 
-		addVisualiserStocksButton(mainPane);
+		addButton(mainPane);
 
 		showScene(mainPane, "Interface du logisticien");
 	}
@@ -192,12 +192,13 @@ public class LogisticienView extends Stage {
 		List<String> information = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : stockGrouped.entrySet()) {
 			if (entry.getValue() < 10) {
-				int a= 10 - entry.getValue();
+				int a = 10 - entry.getValue();
 				String[] keyParts = entry.getKey().split("-");
 				produit.add(keyParts[0]);
 				dci.add(keyParts[1]);
 				dosage.add(keyParts[2]);
-				String message = "• Il manque au stock au moins " + a + " " + keyParts[0] + " avec un dosage de " + keyParts[2];
+				String message = "• Il manque au stock au moins " + a + " " + keyParts[0] + " avec un dosage de "
+						+ keyParts[2];
 				lowStockMessages.add(message);
 			}
 		}
@@ -211,36 +212,35 @@ public class LogisticienView extends Stage {
 	 * @param lowStockMessages La liste de messages de stock bas.
 	 */
 	public void displayLowStockMessages(GridPane mainPane, List<String> lowStockMessages) {
-	    if (!lowStockMessages.isEmpty()) {
-	        Label nouveauxMessagesLabel = new Label("Nouveaux messages:");
-	        nouveauxMessagesLabel.setFont(Font.font("Arial", 18));
-	        nouveauxMessagesLabel.setStyle("-fx-underline: true;");
-	        mainPane.add(nouveauxMessagesLabel, 0, 1);
-	        GridPane.setMargin(nouveauxMessagesLabel, new Insets(10));
+		if (!lowStockMessages.isEmpty()) {
+			Label nouveauxMessagesLabel = new Label("Nouveaux messages:");
+			nouveauxMessagesLabel.setFont(Font.font("Arial", 18));
+			nouveauxMessagesLabel.setStyle("-fx-underline: true;");
+			mainPane.add(nouveauxMessagesLabel, 0, 1);
+			GridPane.setMargin(nouveauxMessagesLabel, new Insets(10));
 
-	        int rowIndex = 3;
+			int rowIndex = 3;
 
-	        for (int i = 0; i < lowStockMessages.size(); i++) {
-	            String message = lowStockMessages.get(i);
-	            Label messageLabel = new Label(message);
-	            messageLabel.setTextFill(Color.RED);
-	            messageLabel.setWrapText(true);
-	            mainPane.add(messageLabel, 0, rowIndex);
-	            GridPane.setMargin(messageLabel, new Insets(5, 10, 5, 10));
+			for (int i = 0; i < lowStockMessages.size(); i++) {
+				String message = lowStockMessages.get(i);
+				Label messageLabel = new Label(message);
+				messageLabel.setTextFill(Color.RED);
+				messageLabel.setWrapText(true);
+				mainPane.add(messageLabel, 0, rowIndex);
+				GridPane.setMargin(messageLabel, new Insets(5, 10, 5, 10));
 
-	            Spinner<Integer> quantitySpinner = createQuantitySpinner();
-	            mainPane.add(quantitySpinner, 1, rowIndex);
+				Spinner<Integer> quantitySpinner = createQuantitySpinner();
+				mainPane.add(quantitySpinner, 1, rowIndex);
 
-	            Button orderButton = createOrderButton(message, quantitySpinner, i);  // Pass current index
-	            mainPane.add(orderButton, 2, rowIndex);
+				Button orderButton = createOrderButton(message, quantitySpinner, i); // Pass current index
+				mainPane.add(orderButton, 2, rowIndex);
 
-	            setButtonLayout(quantitySpinner, orderButton);
+				setButtonLayout(quantitySpinner, orderButton);
 
-	            rowIndex++;
-	        }
-	    }
+				rowIndex++;
+			}
+		}
 	}
-
 
 	/**
 	 * Crée un spinner pour sélectionner la quantité.
@@ -260,7 +260,7 @@ public class LogisticienView extends Stage {
 
 		return quantitySpinner;
 	}
-	
+
 	/**
 	 * Crée un bouton de commande.
 	 *
@@ -269,58 +269,57 @@ public class LogisticienView extends Stage {
 	 * @return Le bouton de commande créé.
 	 */
 	public Button createOrderButton(String message, Spinner<Integer> quantitySpinner, int index) {
-	    Button orderButton = new Button("Buy");
-	    orderButton.setOnAction(event -> {
-	        int quantity = quantitySpinner.getValue();
-	        Stage popupStage = new Stage();
-	        popupStage.initModality(Modality.APPLICATION_MODAL);
-	        popupStage.setTitle("Saisir les informations du médicament");
+		Button orderButton = new Button("Buy");
+		orderButton.setOnAction(event -> {
+			int quantity = quantitySpinner.getValue();
+			Stage popupStage = new Stage();
+			popupStage.initModality(Modality.APPLICATION_MODAL);
+			popupStage.setTitle("Saisir les informations du médicament");
 
-	        DatePicker datePicker = new DatePicker();
-	        TextField lotTextField = new TextField();
-	        TextField numCaisseTextField = new TextField();
-	        TextField caisseTextField = new TextField();
-	        TextField classeTextField = new TextField();
+			DatePicker datePicker = new DatePicker();
+			TextField lotTextField = new TextField();
+			TextField numCaisseTextField = new TextField();
+			TextField caisseTextField = new TextField();
+			TextField classeTextField = new TextField();
 
-	        GridPane gridPane = new GridPane();
-	        gridPane.setVgap(10);
-	        gridPane.setHgap(10);
-	        gridPane.addRow(0, new Label("Date limite :"), datePicker);
-	        gridPane.addRow(1, new Label("Numéro de lot :"), lotTextField);
-	        gridPane.addRow(2, new Label("Numéro de caisse :"), numCaisseTextField);
-	        gridPane.addRow(3, new Label("Nom de la caisse :"), caisseTextField);
-	        gridPane.addRow(4, new Label("Nom de la classe :"), classeTextField);
+			GridPane gridPane = new GridPane();
+			gridPane.setVgap(10);
+			gridPane.setHgap(10);
+			gridPane.addRow(0, new Label("Date limite :"), datePicker);
+			gridPane.addRow(1, new Label("Numéro de lot :"), lotTextField);
+			gridPane.addRow(2, new Label("Numéro de caisse :"), numCaisseTextField);
+			gridPane.addRow(3, new Label("Nom de la caisse :"), caisseTextField);
+			gridPane.addRow(4, new Label("Nom de la classe :"), classeTextField);
 
-	        Button validerButton = new Button("Valider");
-	        validerButton.setOnAction(e -> {
-	            LocalDate dateLimite = datePicker.getValue();
-	            String lot = lotTextField.getText();
-	            String numCaisse = numCaisseTextField.getText();
-	            String classe = classeTextField.getText();
-	            String caisse = caisseTextField.getText();
-	            String produit = this.produit.get(index);
-	            String dci = this.dci.get(index);
-	            String dosage = this.dosage.get(index);
+			Button validerButton = new Button("Valider");
+			validerButton.setOnAction(e -> {
+				LocalDate dateLimite = datePicker.getValue();
+				String lot = lotTextField.getText();
+				int numCaisse = Integer.parseInt(numCaisseTextField.getText());
+				String classe = classeTextField.getText();
+				String caisse = caisseTextField.getText();
+				String produit = this.produit.get(index);
+				String dci = this.dci.get(index);
+				String dosage = this.dosage.get(index);
 
-	            // Insert into the database
-	            bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
-	                // Close the pop-up
-	                popupStage.close();
-	                
-	                // Refresh the logistician view to reflect the updated stock
-	                afficheVueLogisticien();
-	            
-	        });
+				// Insert into the database
+				bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
+				// Close the pop-up
+				popupStage.close();
 
-	        gridPane.addRow(6, validerButton);
+				// Refresh the logistician view to reflect the updated stock
+				afficheVueLogisticien();
 
-	        popupStage.setScene(new Scene(gridPane, 300, 200));
-	        popupStage.showAndWait();
-	    });
-	    return orderButton;
+			});
+
+			gridPane.addRow(6, validerButton);
+
+			popupStage.setScene(new Scene(gridPane, 300, 200));
+			popupStage.showAndWait();
+		});
+		return orderButton;
 	}
 
-	
 	/**
 	 * Définit la disposition des éléments dans le panneau principal.
 	 *
@@ -335,19 +334,70 @@ public class LogisticienView extends Stage {
 	}
 
 	/**
-	 * Ajoute le bouton pour visualiser les stocks au panneau principal.
-	 *
+	 * Ajoute le bouton pour visualiser les stocks au panneau principal. Ajoute le
+	 * bouton pour ajouter les informations concernant un attentat.
+	 * 
 	 * @param mainPane Le panneau principal où ajouter le bouton.
 	 */
-	public void addVisualiserStocksButton(GridPane mainPane) {
-		Button visualiserStocksButton = new Button("Visualiser les stocks");
-		visualiserStocksButton.setOnAction(event -> {
-			afficheVueStocksMedicaments();
-		});
-		mainPane.add(visualiserStocksButton, 80, 0);
-		GridPane.setHalignment(visualiserStocksButton, HPos.RIGHT);
-		GridPane.setMargin(visualiserStocksButton, new Insets(1));
+	public void addButton(GridPane mainPane) {
+	    Button visualiserStocksButton = new Button("Visualiser les stocks");
+	    Button renseignementAttentatButton = new Button("Infos Attentat");
+
+	    visualiserStocksButton.setOnAction(event -> {
+	        afficheVueStocksMedicaments();
+	    });
+	    renseignementAttentatButton.setOnAction(event -> {
+	        createAttentatInfoPopup();
+	    });
+
+	    mainPane.add(visualiserStocksButton, 80, 0); // Keep existing position for one button
+	    mainPane.add(renseignementAttentatButton, 80, 1); // Place the second button below the first
+
+	    GridPane.setHalignment(visualiserStocksButton, HPos.RIGHT);
+	    GridPane.setHalignment(renseignementAttentatButton, HPos.RIGHT);
+
+	    GridPane.setMargin(visualiserStocksButton, new Insets(1));
+	    GridPane.setMargin(renseignementAttentatButton, new Insets(1));
 	}
+
+	private void createAttentatInfoPopup() {
+	    Stage popupStage = new Stage();
+	    popupStage.initModality(Modality.APPLICATION_MODAL);
+	    popupStage.setTitle("Saisir les informations de l'attentat");
+
+	    TextField lieuTextField = new TextField();
+	    TextField totBlessesTextField = new TextField();
+	    TextField nbAsoignerTextField = new TextField();
+	    DatePicker dateAttentatTextField = new DatePicker();
+
+	    GridPane gridPane = new GridPane();
+	    gridPane.setVgap(10);
+	    gridPane.setHgap(10);
+	    gridPane.addRow(0, new Label("Date de l'attentat :"), dateAttentatTextField);
+	    gridPane.addRow(1, new Label("Lieu de l'attentat :"), lieuTextField);
+	    gridPane.addRow(2, new Label("Total de blessés :"), totBlessesTextField);
+	    gridPane.addRow(3, new Label("Nombre à soigner :"), nbAsoignerTextField);
+
+	    Button validerButton = new Button("Valider");
+	    validerButton.setOnAction(e -> {
+	    	LocalDate dateAttentat = dateAttentatTextField.getValue();
+			String lieu = lieuTextField.getText();
+			int totBlesses = Integer.parseInt(totBlessesTextField.getText());
+			int nbAsoigner = Integer.parseInt(nbAsoignerTextField.getText());
+
+			// Insert into the database
+			bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
+			// Close the pop-up
+			popupStage.close();
+
+			// Refresh the logistician view to reflect the updated stock
+			afficheVueLogisticien();
+	    });
+	    gridPane.addRow(4, validerButton);
+	    popupStage.setScene(new Scene(gridPane));
+	    popupStage.showAndWait();
+	}
+
 
 	/**
 	 * Affiche une scène avec le panneau principal et le titre spécifiés.
@@ -411,7 +461,6 @@ public class LogisticienView extends Stage {
 		return searchField;
 	}
 
-	
 	/**
 	 * Crée et retourne un bouton de retour vers la vue du logisticien.
 	 *
@@ -431,5 +480,4 @@ public class LogisticienView extends Stage {
 		return backButton;
 	}
 
-	
 }
