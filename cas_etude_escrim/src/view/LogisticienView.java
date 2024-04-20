@@ -1,42 +1,44 @@
 package view;
 
 import java.time.LocalDate;
+import javafx.scene.layout.ColumnConstraints;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.stage.Stage;
 import model.BDD;
-import javafx.scene.control.DatePicker;
-import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 
 /**
  * Classe représentant la vue du logisticien.
  */
 public class LogisticienView extends Stage {
-
+	
+    private Label errorLabel; // To display error messages
 	private Stage primaryStage;
 	private final String[] nomsColonnes = { "PRODUIT", "DCI", "DOSAGE", "DLU", "QUANTITÉ", "LOT", "CLASSE",
 			"NUM_CAISSE", "CAISSE" };
@@ -45,8 +47,6 @@ public class LogisticienView extends Stage {
 	private List<String> produit;
 	private List<String> dci;
 	private List<String> dosage;
-	private List<String> classe;
-	private List<String> caisse;
 	private Label successMessageLabel;
 
 	/**
@@ -60,8 +60,8 @@ public class LogisticienView extends Stage {
 		this.produit = new ArrayList<>();
 		this.dci = new ArrayList<>();
 		this.dosage = new ArrayList<>();
-		this.classe = new ArrayList<>();
-		this.caisse = new ArrayList<>();
+		errorLabel = new Label(); // Initialize the error label
+        errorLabel.setTextFill(Color.RED); // Set error text color
 	}
 
 	/**
@@ -189,7 +189,6 @@ public class LogisticienView extends Stage {
 	 */
 	public List<String> generateLowStockMessages(Map<String, Integer> stockGrouped) {
 		List<String> lowStockMessages = new ArrayList<>();
-		List<String> information = new ArrayList<>();
 		for (Map.Entry<String, Integer> entry : stockGrouped.entrySet()) {
 			if (entry.getValue() < 10) {
 				int a = 10 - entry.getValue();
@@ -269,57 +268,121 @@ public class LogisticienView extends Stage {
 	 * @return Le bouton de commande créé.
 	 */
 	public Button createOrderButton(String message, Spinner<Integer> quantitySpinner, int index) {
-		Button orderButton = new Button("Buy");
-		orderButton.setOnAction(event -> {
-			int quantity = quantitySpinner.getValue();
-			Stage popupStage = new Stage();
-			popupStage.initModality(Modality.APPLICATION_MODAL);
-			popupStage.setTitle("Saisir les informations du médicament");
+	    Button orderButton = new Button("Buy");
+	    orderButton.setOnAction(event -> {
+	        int quantity = quantitySpinner.getValue();
+	        Stage popupStage = new Stage();
+	        popupStage.initModality(Modality.APPLICATION_MODAL);
+	        popupStage.setTitle("Saisir les informations du médicament");
 
-			DatePicker datePicker = new DatePicker();
-			TextField lotTextField = new TextField();
-			TextField numCaisseTextField = new TextField();
-			TextField caisseTextField = new TextField();
-			TextField classeTextField = new TextField();
+	        GridPane gridPane = new GridPane();
+	        gridPane.setVgap(20);
+	        gridPane.setHgap(20);
+	        gridPane.setPadding(new Insets(20));
 
-			GridPane gridPane = new GridPane();
-			gridPane.setVgap(10);
-			gridPane.setHgap(10);
-			gridPane.addRow(0, new Label("Date limite :"), datePicker);
-			gridPane.addRow(1, new Label("Numéro de lot :"), lotTextField);
-			gridPane.addRow(2, new Label("Numéro de caisse :"), numCaisseTextField);
-			gridPane.addRow(3, new Label("Nom de la caisse :"), caisseTextField);
-			gridPane.addRow(4, new Label("Nom de la classe :"), classeTextField);
+	        // Initialize the error label and add it to the grid
+	        Label errorLabel = new Label();
+	        errorLabel.setTextFill(Color.RED);  // Set the text color to red for visibility
+	        gridPane.add(errorLabel, 0, 0, 2, 1);  // Span across two columns
 
-			Button validerButton = new Button("Valider");
-			validerButton.setOnAction(e -> {
-				LocalDate dateLimite = datePicker.getValue();
-				String lot = lotTextField.getText();
-				int numCaisse = Integer.parseInt(numCaisseTextField.getText());
-				String classe = classeTextField.getText();
-				String caisse = caisseTextField.getText();
-				String produit = this.produit.get(index);
-				String dci = this.dci.get(index);
-				String dosage = this.dosage.get(index);
+	        // Initialize the success label but do not add to grid yet
+	        Label successLabel = new Label();
+	        successLabel.setTextFill(Color.GREEN);
 
-				// Insert into the database
-				bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
-				// Close the pop-up
-				popupStage.close();
+	        // Other UI components
+	        DatePicker datePicker = new DatePicker();
+	        TextField lotTextField = new TextField();
+	        TextField numCaisseTextField = new TextField();
+	        TextField caisseTextField = new TextField();
+	        TextField classeTextField = new TextField();
 
-				// Refresh the logistician view to reflect the updated stock
-				afficheVueLogisticien();
+	        // Add components to the grid
+	        gridPane.addRow(1, new Label("Date limite :"), datePicker);
+	        gridPane.addRow(2, new Label("Numéro de lot :"), lotTextField);
+	        gridPane.addRow(3, new Label("Numéro de caisse :"), numCaisseTextField);
+	        gridPane.addRow(4, new Label("Nom de la caisse :"), caisseTextField);
+	        gridPane.addRow(5, new Label("Nom de la classe :"), classeTextField);
 
-			});
+	        Button validerButton = new Button("Valider");
+	        validerButton.setOnAction(e -> {
+	            LocalDate dateLimite = datePicker.getValue();
+	            String lot = lotTextField.getText();
+	            String numCaisseStr = numCaisseTextField.getText();
+	            String classe = classeTextField.getText();
+	            String caisse = caisseTextField.getText();
 
-			gridPane.addRow(6, validerButton);
+	            if (validerChampsMed(dateLimite, lot, numCaisseStr, classe, caisse, errorLabel)) {
+	                int numCaisse = Integer.parseInt(numCaisseStr); // Convert numCaisse here after validation
+	                String produit = this.produit.get(index);
+	                String dci = this.dci.get(index);
+	                String dosage = this.dosage.get(index);
 
-			popupStage.setScene(new Scene(gridPane, 300, 200));
-			popupStage.showAndWait();
-		});
-		return orderButton;
+	                // Insert into the database
+	                bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
+	                
+	                // Display success message
+	                successLabel.setText("Ajout du médicament " + produit + " réussi");
+	                gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
+
+	                // Close popup after a delay
+	                new Thread(() -> {
+	                    try {
+	                        Thread.sleep(2000);
+	                        Platform.runLater(() -> {
+	                            popupStage.close();
+	                            afficheVueLogisticien();  // Refresh the logistician view to reflect the updated stock
+	                        });
+	                    } catch (InterruptedException ex) {
+	                        ex.printStackTrace();
+	                    }
+	                }).start();
+	            }
+	        });
+
+	        gridPane.addRow(6, validerButton);
+	        popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+	        popupStage.showAndWait();
+	    });
+	    return orderButton;
 	}
 
+	
+	public boolean validerChampsMed(LocalDate dateLimite, String lot, String numCaisseStr, String classe, String caisse, Label errorLabel) {
+	    if (lot.isEmpty()) {
+	        errorLabel.setText("Le numéro de lot est requis.");
+	        return false;
+	    }
+
+	    if (dateLimite == null) {
+	        errorLabel.setText("La date limite du produit est requise.");
+	        return false;
+	    }
+
+	    try {
+	        int numCaisse = Integer.parseInt(numCaisseStr);
+	        if (numCaisse <= 0) {
+	            errorLabel.setText("Le numéro de caisse doit être un entier positif.");
+	            return false;
+	        }
+	    } catch (NumberFormatException e) {
+	        errorLabel.setText("Le numéro de caisse doit être un nombre valide.");
+	        return false;
+	    }
+
+	    if (classe.isEmpty()) {
+	        errorLabel.setText("La classe du produit est requise.");
+	        return false;
+	    }
+
+	    if (caisse.isEmpty()) {
+	        errorLabel.setText("Le nom de la caisse est requis.");
+	        return false;
+	    }
+
+	    return true; // All checks passed
+	}
+
+	
 	/**
 	 * Définit la disposition des éléments dans le panneau principal.
 	 *
@@ -365,38 +428,93 @@ public class LogisticienView extends Stage {
 	    popupStage.initModality(Modality.APPLICATION_MODAL);
 	    popupStage.setTitle("Saisir les informations de l'attentat");
 
-	    TextField lieuTextField = new TextField();
-	    TextField totBlessesTextField = new TextField();
-	    TextField nbAsoignerTextField = new TextField();
-	    DatePicker dateAttentatTextField = new DatePicker();
-
 	    GridPane gridPane = new GridPane();
 	    gridPane.setVgap(10);
 	    gridPane.setHgap(10);
-	    gridPane.addRow(0, new Label("Date de l'attentat :"), dateAttentatTextField);
-	    gridPane.addRow(1, new Label("Lieu de l'attentat :"), lieuTextField);
-	    gridPane.addRow(2, new Label("Total de blessés :"), totBlessesTextField);
-	    gridPane.addRow(3, new Label("Nombre à soigner :"), nbAsoignerTextField);
+	    gridPane.setPadding(new Insets(20));
+
+	    // Initialize the error label and add it to the grid
+	    Label errorLabel = new Label();
+	    errorLabel.setTextFill(Color.RED);  // Set the text color to red for visibility
+	    gridPane.add(errorLabel, 0, 0, 2, 1);  // Span across two columns at the top of the grid
+
+	    // Initialize the success label but do not add to grid yet
+	    Label successLabel = new Label();
+	    successLabel.setTextFill(Color.GREEN);
+
+	    // Other UI components
+	    DatePicker dateAttentatTextField = new DatePicker();
+	    TextField lieuTextField = new TextField();
+	    TextField totBlessesTextField = new TextField();
+	    TextField nbAsoignerTextField = new TextField();
+
+	    // Add components to the grid
+	    gridPane.addRow(1, new Label("Date de l'attentat :"), dateAttentatTextField);
+	    gridPane.addRow(2, new Label("Lieu de l'attentat :"), lieuTextField);
+	    gridPane.addRow(3, new Label("Total de blessés :"), totBlessesTextField);
+	    gridPane.addRow(4, new Label("Nombre à soigner :"), nbAsoignerTextField);
 
 	    Button validerButton = new Button("Valider");
 	    validerButton.setOnAction(e -> {
-	    	LocalDate dateAttentat = dateAttentatTextField.getValue();
-			String lieu = lieuTextField.getText();
-			int totBlesses = Integer.parseInt(totBlessesTextField.getText());
-			int nbAsoigner = Integer.parseInt(nbAsoignerTextField.getText());
+	        LocalDate dateAttentat = dateAttentatTextField.getValue();
+	        String lieu = lieuTextField.getText();
+	        String totBlessesStr = totBlessesTextField.getText();
+	        String nbAsoignerStr = nbAsoignerTextField.getText();
 
-			// Insert into the database
-			bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
-			// Close the pop-up
-			popupStage.close();
+	        if (validateFields(dateAttentat, lieu, totBlessesStr, nbAsoignerStr, errorLabel)) {
+	            int totBlesses = Integer.parseInt(totBlessesStr);
+	            int nbAsoigner = Integer.parseInt(nbAsoignerStr);
 
-			// Refresh the logistician view to reflect the updated stock
-			afficheVueLogisticien();
+	            // Insert into the database
+	            bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
+	            
+	            // Display success message
+	            successLabel.setText("Ajout de l'attentat à " + lieu + " réussi");
+	            gridPane.add(successLabel, 0, 6, 2, 1);  // Span across both columns
+
+	            // Close popup after a delay
+	            new Thread(() -> {
+	                try {
+	                    Thread.sleep(2000);
+	                    Platform.runLater(() -> {
+	                        popupStage.close();
+	                        afficheVueLogisticien();  // Refresh the logistician view to reflect the updated stock
+	                    });
+	                } catch (InterruptedException ex) {
+	                    ex.printStackTrace();
+	                }
+	            }).start();
+	        }
 	    });
-	    gridPane.addRow(4, validerButton);
-	    popupStage.setScene(new Scene(gridPane));
+
+	    gridPane.addRow(5, validerButton);
+	    popupStage.setScene(new Scene(gridPane, 450, 350));  // Adjust the scene size if necessary
 	    popupStage.showAndWait();
 	}
+
+	public boolean validateFields(LocalDate date, String lieu, String totalBlessesStr, String toTreatStr, Label errorLabel) {
+	    if (date == null) {
+	        errorLabel.setText("La date de l'attentat est requise.");
+	        return false;
+	    }
+	    if (lieu.isEmpty()) {
+	        errorLabel.setText("Le lieu de l'attentat est requis.");
+	        return false;
+	    }
+	    try {
+	        int totalBlesses = Integer.parseInt(totalBlessesStr);
+	        int toTreat = Integer.parseInt(toTreatStr);
+	        if (totalBlesses <= 0 || toTreat <= 0) {
+	            errorLabel.setText("Les nombres de blessés et à soigner doivent être positifs.");
+	            return false;
+	        }
+	    } catch (NumberFormatException e) {
+	        errorLabel.setText("Les nombres de blessés et à soigner doivent être des entiers positifs.");
+	        return false;
+	    }
+	    return true;
+	}
+
 
 
 	/**
@@ -481,3 +599,4 @@ public class LogisticienView extends Stage {
 	}
 
 }
+
