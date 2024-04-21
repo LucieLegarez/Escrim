@@ -65,9 +65,6 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         LocalDate dateNaissance = datePicker.getValue();
         String statut = statutComboBox.getValue();
 
-        String lieuAttentat = "Blessé".equals(statut) ? lieuAt.getText() : null;
-        LocalDate dateAttentat = "Blessé".equals(statut) ? dateAt.getValue() : LocalDate.of(1, 1, 1);
-
         if (!validerChamps(prenom, nom, mdp, dateNaissance)) {
             return;
         }
@@ -78,7 +75,7 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         if (!utilisateur[0].equals("false")) {
             afficherErreur("Un utilisateur avec cet identifiant existe déjà.");
         } else {
-            ajouterUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut, lieuAttentat, dateAttentat);
+            ajouterUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
         }
     }
 
@@ -114,16 +111,7 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         }
 
         String statut = statutComboBox.getValue();
-        if ("Blessé".equals(statut)) {
-            if (lieuAt.getText().isEmpty()) {
-                afficherErreur("Le lieu de l'attentat est requis pour les blessés.");
-                return false;
-            }
-            if (dateAt.getValue() == null) {
-                afficherErreur("La date de l'attentat est requise pour les blessés.");
-                return false;
-            }
-        }
+        
 
         return true;
     }
@@ -159,8 +147,8 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
      * @param statut Statut de l'utilisateur
      */
     public void ajouterUtilisateur(String identifiant, String prenom, String nom, LocalDate dateNaissance,
-            String mdp, String statut, String lieuAttentat, LocalDate dateAttentat) {
-        database.insererUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut, lieuAttentat, dateAttentat);
+            String mdp, String statut) {
+        database.insererUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
         afficherErreur("Utilisateur " + prenom + " " + nom + " ajouté avec succès");
         erreur.setTextFill(Color.GREEN);
 

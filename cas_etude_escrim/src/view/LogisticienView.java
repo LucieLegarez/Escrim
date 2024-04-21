@@ -357,6 +357,11 @@ public class LogisticienView extends Stage {
 	        errorLabel.setText("La date limite du produit est requise.");
 	        return false;
 	    }
+	    
+	    if (dateLimite.isBefore(LocalDate.now())) {
+	        errorLabel.setText("La date limite du produit ne doit pas être antérieure à la date du jour.");
+	        return false;
+	    }
 
 	    try {
 	        int numCaisse = Integer.parseInt(numCaisseStr);
@@ -404,7 +409,7 @@ public class LogisticienView extends Stage {
 	 */
 	public void addButton(GridPane mainPane) {
 	    Button visualiserStocksButton = new Button("Visualiser les stocks");
-	    Button renseignementAttentatButton = new Button("Infos Attentat");
+	    Button renseignementAttentatButton = new Button("Ajouter Attentat");
 
 	    visualiserStocksButton.setOnAction(event -> {
 	        afficheVueStocksMedicaments();
@@ -497,6 +502,12 @@ public class LogisticienView extends Stage {
 	        errorLabel.setText("La date de l'attentat est requise.");
 	        return false;
 	    }
+	    
+	    if (date.isAfter(LocalDate.now())) {
+	        errorLabel.setText("La date de l'attentat ne doit pas être postérieure à la date du jour.");
+	        return false;
+	    }
+	    
 	    if (lieu.isEmpty()) {
 	        errorLabel.setText("Le lieu de l'attentat est requis.");
 	        return false;
@@ -506,6 +517,10 @@ public class LogisticienView extends Stage {
 	        int toTreat = Integer.parseInt(toTreatStr);
 	        if (totalBlesses <= 0 || toTreat <= 0) {
 	            errorLabel.setText("Les nombres de blessés et à soigner doivent être positifs.");
+	            return false;
+	        }
+	        if (totalBlesses < toTreat ) {
+	            errorLabel.setText("Les nombres de blessés à soigner doit être égal ou plus petit que le total des blessés.");
 	            return false;
 	        }
 	    } catch (NumberFormatException e) {

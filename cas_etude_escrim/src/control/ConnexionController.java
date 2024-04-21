@@ -41,7 +41,15 @@ public class ConnexionController implements EventHandler<ActionEvent> {
         database = new BDD();
     }
 
-    /**
+    public TextField getTextId() {
+		return textId;
+	}
+
+	public void setTextId(TextField textId) {
+		this.textId = textId;
+	}
+
+	/**
      * Méthode de gestion de l'événement de connexion.
      */
     public void handle(ActionEvent e) {
@@ -78,12 +86,11 @@ public class ConnexionController implements EventHandler<ActionEvent> {
         String prenom = utilisateur[1].trim();
         String nom = utilisateur[2].trim();
         Date dateNaissance = Date.valueOf(utilisateur[3].trim());
-       
+        String userId = prenom + "."+ nom;
+        SessionController.getInstance().setUserId(userId);
         
         if ((utilisateur[5].trim()).equals("Blessé")) {
-        	 String lieuAttentat = utilisateur[6].trim();
-             Date dateAttentat = Date.valueOf(utilisateur[7].trim());
-            afficherVueBlesse(prenom, nom, dateNaissance, lieuAttentat, dateAttentat);
+            afficherVueBlesse(prenom, nom, dateNaissance);
         } else if ((utilisateur[5].trim()).equals("Médecin")) {
             afficherVueMedecin();
         } else if ((utilisateur[5].trim()).equals("Logisticien")) {
@@ -98,7 +105,7 @@ public class ConnexionController implements EventHandler<ActionEvent> {
      * @param nom Nom de l'utilisateur
      * @param dateNaissance Date de naissance de l'utilisateur
      */
-    public void afficherVueBlesse(String prenom, String nom, Date dateNaissance, String lieuAttentat, Date dateAttentat) {
+    public void afficherVueBlesse(String prenom, String nom, Date dateNaissance) {
         Task<Void> pauseTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
@@ -112,7 +119,7 @@ public class ConnexionController implements EventHandler<ActionEvent> {
             public void handle(WorkerStateEvent event) {
                 primaryStage.close();
                 BlesseView blesseView = new BlesseView(primaryStage);
-                blesseView.afficheVueBlesse(prenom, nom, dateNaissance, lieuAttentat, dateAttentat);
+                blesseView.afficheVueBlesse(prenom, nom, dateNaissance);
             }
         });
 

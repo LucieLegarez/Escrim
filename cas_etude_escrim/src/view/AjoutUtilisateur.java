@@ -62,9 +62,6 @@ public class AjoutUtilisateur extends Stage {
         dateNaissance = new Label("Date de naissance :");
         dateInfo = new Label("(au format DD/MM/YYYY)");
         statut = new Label("Statut :");
-        lieuAttentat = new Label ("lieu de l'attentat :");
-        dateAttentat = new Label ("Date de l'attentat : ");
-        dateInfoAtt = new Label("(au format DD/MM/YYYY)");
         erreur = new Label();
         boutonAjouter = new Button("Ajouter");
         afficheVueAjoutUtilisateur();
@@ -83,9 +80,7 @@ public class AjoutUtilisateur extends Stage {
 
         setupCommonFields(grid); // Setup common fields such as prenom, nom, etc.
 
-        statutComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-            updateDynamicFields(grid, newVal); // This method will handle dynamic UI changes
-        });
+        
 
         setupBackButton(grid); // Setup the back button
         setupAddButton(grid); // Setup the add button
@@ -131,35 +126,14 @@ public class AjoutUtilisateur extends Stage {
 		statut.setFont(new Font("Arial", 25.0));
 		if (statutComboBox.getItems().isEmpty()) {
 			statutComboBox.getItems().addAll("Blessé", "Médecin", "Logisticien");
-			statutComboBox.setValue("Médecin");
+			statutComboBox.setValue("Blessé");
 			statutComboBox.setStyle("-fx-font-size: 16.0;");
 		}
 		grid.add(statut, 0, 4);
 		grid.add(statutComboBox, 1, 4);
     }
     
-    private void updateDynamicFields(GridPane grid, String statut) {
-        clearDynamicFields(grid); // First, clear previous dynamic fields if any
 
-        if ("Blessé".equals(statut)) {
-            lieuAttentat.setFont(new Font("Arial", 25.0));
-            textlieuAttentat.setPromptText("Saisir le lieu de l'attentat");
-            textlieuAttentat.setFont(Font.font("Arial", FontPosture.ITALIC, 16.0));
-            grid.add(lieuAttentat, 0, 5);
-            grid.add(textlieuAttentat, 1, 5);
-            
-            dateAttentat.setFont(new Font("Arial", 25.0));
-            dateAttentatP.setPromptText("Date de l'attentat");
-            dateAttentatP.setStyle("-fx-font-family: Arial; -fx-font-style: italic; -fx-font-size: 16;");
-            grid.add(dateAttentat, 0, 6);
-            grid.add(dateAttentatP, 1, 6);
-        }
-    }
-    
-    private void clearDynamicFields(GridPane grid) {
-        grid.getChildren().removeIf(node -> node == lieuAttentat || node == textlieuAttentat || node == dateAttentat || node == dateAttentatP);
-    }
-		
 		
     private void setupBackButton(GridPane grid) {
     	ImageView imageView = new ImageView(new Image("file:ressources/flèche.png"));

@@ -2,6 +2,7 @@ package view;
 
 import java.sql.Date;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -13,10 +14,12 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import model.BDD;
 
 /**
  * Classe représentant la vue du blessé.
@@ -28,8 +31,8 @@ public class BlesseView extends Stage {
 	private Label fichePatient;
 	private String prenom;
 	private String nom;
-	private String lieuAttentat;
 	private Label titre;
+	private final BDD bdd;
 
 	/**
 	 * Constructeur de la vue du blessé.
@@ -41,6 +44,7 @@ public class BlesseView extends Stage {
 	    this.ficheRenseignement = new Label("Fiche Renseignements");
 	    this.fichePatient = new Label("Fiche Patient");
 	    this.titre = new Label("Fiche de " + prenom + " " + nom);
+	    this.bdd = new BDD();
 	}
 
 
@@ -51,19 +55,16 @@ public class BlesseView extends Stage {
      * @param nom           Le nom du blessé.
      * @param dateNaissance La date de naissance du blessé.
      */
-    public void afficheVueBlesse(String prenom, String nom, Date dateNaissance, String lieuAttentat, Date dateAttentat) {
+    public void afficheVueBlesse(String prenom, String nom, Date dateNaissance) {
         this.prenom = prenom;
         this.nom = nom;
         this.titre.setText("Fiche de " + prenom + " " + nom);
-        this.lieuAttentat = lieuAttentat;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String dateNaissanceFormatted = dateNaissance.toLocalDate().format(formatter);
-        String dateAttentatFormatted = dateAttentat.toLocalDate().format(formatter);
-        
-        GridPane infosPane = createInfosPane(dateNaissanceFormatted, dateAttentatFormatted);
-        GridPane patientPane = createPatientPane();
+               
+        GridPane infosPane = createInfosPane(dateNaissanceFormatted);
+        GridPane patientPane = afficherPrescriptions(prenom, nom);
         Line line = createLine();
-
         GridPane mainPane = createMainPane(infosPane, patientPane, line);
         addTitleAndBackButton(mainPane);
 
@@ -76,7 +77,7 @@ public class BlesseView extends Stage {
      * @param dateNaissanceFormatted La date de naissance du blessé formatée.
      * @return Le panneau d'informations créé.
      */
-    public GridPane createInfosPane(String dateNaissanceFormatted, String dateAttentatFormatted) {
+    public GridPane createInfosPane(String dateNaissanceFormatted) {
         GridPane infosPane = new GridPane();
         infosPane.setPadding(new Insets(10));
         infosPane.setVgap(10);
@@ -112,16 +113,7 @@ public class BlesseView extends Stage {
         GridPane.setColumnSpan(dateNaissanceLabel, GridPane.REMAINING);
         infosPane.add(dateNaissanceLabel, 0, 6);
         
-        Label lieuLabel = new Label("Lieu de l'attentat : " + lieuAttentat);
-        lieuLabel.setFont(Font.font("Arial", 15));
-        GridPane.setColumnSpan(lieuLabel, GridPane.REMAINING);
-        infosPane.add(lieuLabel, 0, 7);
         
-        Label dateAttentatLabel = new Label("Date de l'attentat : " + dateAttentatFormatted);
-        dateAttentatLabel.setFont(Font.font("Arial", 15));
-        GridPane.setColumnSpan(dateAttentatLabel, GridPane.REMAINING);
-        infosPane.add(dateAttentatLabel, 0, 8);
-
         return infosPane;
     }
 
@@ -130,44 +122,59 @@ public class BlesseView extends Stage {
      * 
      * @return Le panneau d'informations sur le patient créé.
      */
-    public GridPane createPatientPane() {
+
+    
+    public GridPane afficherPrescriptions(String prenom, String nom) {
+        List<String[]> prescriptions = bdd.recupererPrescriptionsParPatient(prenom, nom);
         GridPane patientPane = new GridPane();
         patientPane.setPadding(new Insets(10));
         patientPane.setVgap(10);
         patientPane.setHgap(5);
         patientPane.setPrefWidth(300);
         patientPane.setStyle("-fx-background-color: white;");
-
+        for (String[] pres : prescriptions) {
+            String date = pres[0]; 
+            String medecin = pres[1];  
+            String médicament = pres[2];
+            String quantite = pres[3];
+           
         fichePatient.setAlignment(Pos.CENTER);
         fichePatient.setFont(new Font("Arial", 20.0));
         fichePatient.setStyle("-fx-underline: true;");
         GridPane.setMargin(patientPane, new Insets(50, 0, 200, 0));
         patientPane.add(fichePatient, 15, 0);
-
+        
         ImageView imageMedicament = new ImageView(new Image("file:ressources/Medicaments.png"));
         imageMedicament.setFitWidth(100);
         imageMedicament.setFitHeight(100);
         GridPane.setColumnSpan(imageMedicament, GridPane.REMAINING);
         GridPane.setHalignment(imageMedicament, HPos.CENTER);
         patientPane.add(imageMedicament, 12, 1);
-
-        Label datePriseCharge = new Label("Date de prise en charge : ");
+        
+        Label datePriseCharge = new Label("Date de prise en charge : " + date);
         datePriseCharge.setFont(Font.font("Arial", 15));
         GridPane.setColumnSpan(datePriseCharge, GridPane.REMAINING);
         patientPane.add(datePriseCharge, 0, 4);
 
-        Label MedecinPrisCharge = new Label("Nom du médecin consultant : ");
+        Label MedecinPrisCharge = new Label("Nom du médecin consultant : " + medecin);
         MedecinPrisCharge.setFont(Font.font("Arial", 15));
         GridPane.setColumnSpan(MedecinPrisCharge, 30);
         patientPane.add(MedecinPrisCharge, 0, 5);
 
-        Label MedicamentsARecuperer = new Label("Médicaments à prendre : ");
+        Label MedicamentsARecuperer = new Label("Médicaments à prendre : " + médicament);
         MedicamentsARecuperer.setFont(Font.font("Arial", 15));
         GridPane.setColumnSpan(MedicamentsARecuperer, GridPane.REMAINING);
         patientPane.add(MedicamentsARecuperer, 0, 6);
-
+        
+        Label QuanntiteAPrendre = new Label("Quantité de médicaments fournie : " + quantite);
+        QuanntiteAPrendre.setFont(Font.font("Arial", 15));
+        GridPane.setColumnSpan(QuanntiteAPrendre, GridPane.REMAINING);
+        patientPane.add(QuanntiteAPrendre, 0, 7);
+        
+        }
         return patientPane;
     }
+
 
     /**
      * Crée une ligne pour séparer les panneaux.

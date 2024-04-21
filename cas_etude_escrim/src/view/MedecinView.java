@@ -5,10 +5,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import control.SessionController;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -21,6 +23,7 @@ import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,7 +49,8 @@ public class MedecinView extends Stage {
 	private List<String> tot_blesses;
 	private List<String> Pers_à_soigner;
 	private Label successMessageLabel;
-
+	private final BlesseView BV;
+	
 	/**
 	 * Constructeur de la vue du logisticien.
 	 *
@@ -55,11 +59,13 @@ public class MedecinView extends Stage {
 	public MedecinView(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		this.bdd = new BDD();
+		this.BV = new BlesseView(primaryStage);
 		this.lieu = new ArrayList<>();
 		this.tot_blesses = new ArrayList<>();
 		this.Pers_à_soigner = new ArrayList<>();
 		errorLabel = new Label(); // Initialize the error label
 		errorLabel.setTextFill(Color.RED); // Set error text color
+
 	}
 
 	/**
@@ -73,8 +79,6 @@ public class MedecinView extends Stage {
 		GridPane mainPane = createMainPane();
 		mainPane.getChildren().clear();
 		addBackButton(mainPane);
-
-		List<String[]> AttentatsList = bdd.recupererListeAttentat();
 
 		addButton(mainPane);
 
@@ -242,15 +246,18 @@ public class MedecinView extends Stage {
 			afficheVueListesAttentats();
 		});
 		renseignementPatientButton.setOnAction(event -> {
-			createAttentatInfoPopup();
+			createPrescriptionPopUp();
 		});
 
 	}
 
-	private void createAttentatInfoPopup() {
+	private void createPrescriptionPopUp() {
 		Stage popupStage = new Stage();
 		popupStage.initModality(Modality.APPLICATION_MODAL);
-		popupStage.setTitle("Saisir les informations de l'attentat");
+		Label titleLabel = new Label("Information prescription");
+		titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+		titleLabel.setAlignment(Pos.CENTER);
+		popupStage.setTitle("Saisir les informations de la prescription pour le patient");
 
 		GridPane gridPane = new GridPane();
 		gridPane.setVgap(10);
@@ -267,35 +274,44 @@ public class MedecinView extends Stage {
 		successLabel.setTextFill(Color.GREEN);
 
 		// Other UI components
-		DatePicker dateAttentatTextField = new DatePicker();
-		TextField lieuTextField = new TextField();
-		TextField totBlessesTextField = new TextField();
-		TextField nbAsoignerTextField = new TextField();
+		TextField prenomTextField = new TextField();
+		TextField nomTextField = new TextField();
 
+		
+	    ComboBox<String> medicamentComboBox = new ComboBox<>();
+	    populateMedicamentComboBox(medicamentComboBox);
+	    Spinner<Integer> quantiteSpinner = createQuantitySpinner();
+	    
+	    ComboBox<String> AttentatComboBox = new ComboBox<>();
+	    populateAttentatComboBox(AttentatComboBox);
+	    
+		
 		// Add components to the grid
-		gridPane.addRow(1, new Label("Date de l'attentat :"), dateAttentatTextField);
-		gridPane.addRow(2, new Label("Lieu de l'attentat :"), lieuTextField);
-		gridPane.addRow(3, new Label("Total de blessés :"), totBlessesTextField);
-		gridPane.addRow(4, new Label("Nombre à soigner :"), nbAsoignerTextField);
-
+		gridPane.addRow(1, new Label("Prénom patient :"), prenomTextField);
+		gridPane.addRow(2, new Label("Nom patient :"), nomTextField);
+		gridPane.addRow(3, new Label("Médicament prescrit :"), medicamentComboBox);
+		gridPane.addRow(4, new Label("Quantité :"), quantiteSpinner);
+		gridPane.addRow(5, new Label("Attentat :"), AttentatComboBox);
+		
 		Button validerButton = new Button("Valider");
 		validerButton.setOnAction(e -> {
-			LocalDate dateAttentat = dateAttentatTextField.getValue();
-			String lieu = lieuTextField.getText();
-			String totBlessesStr = totBlessesTextField.getText();
-			String nbAsoignerStr = nbAsoignerTextField.getText();
+			String pnom = prenomTextField.getText();
+			String nom = nomTextField.getText();
+	        String medPrescrit = medicamentComboBox.getSelectionModel().getSelectedItem();
+	        String infoAttentat = AttentatComboBox.getSelectionModel().getSelectedItem();
 
-			if (validateFields(dateAttentat, lieu, totBlessesStr, nbAsoignerStr, errorLabel)) {
-				int totBlesses = Integer.parseInt(totBlessesStr);
-				int nbAsoigner = Integer.parseInt(nbAsoignerStr);
+	        int quantite = quantiteSpinner.getValue();
 
+			if (validateFields(pnom, nom, medPrescrit, quantite, infoAttentat, errorLabel)) {
+				
+				String id_med = SessionController.getInstance().getUserId();
 				// Insert into the database
-				bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
-
+				String result = bdd.insererPrescription(pnom, nom, medPrescrit, quantite, id_med, infoAttentat);
+				if ("Success".equals(result)) {
 				// Display success message
-				successLabel.setText("Ajout de l'attentat à " + lieu + " réussi");
-				gridPane.add(successLabel, 0, 6, 2, 1); // Span across both columns
-
+					BV.afficherPrescriptions(pnom, nom);
+				successLabel.setText("Ajout de la prescription de " + pnom +" "+ nom + " réussi");
+				gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
 				// Close popup after a delay
 				new Thread(() -> {
 					try {
@@ -308,33 +324,65 @@ public class MedecinView extends Stage {
 						ex.printStackTrace();
 					}
 				}).start();
-			}
+			}else {
+			    errorLabel.setText(result); // Cela affichera le message de stock insuffisant ou toute autre erreur
+			}} 
+				
 		});
 
-		gridPane.addRow(5, validerButton);
+		gridPane.addRow(6, validerButton);
 		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
 		popupStage.showAndWait();
 	}
+	
+	private void populateMedicamentComboBox(ComboBox<String> comboBox) {
+	    List<String[]> medicaments = bdd.recupererStocksMedicaments();
+	    for (String[] medicament : medicaments) {
+	        comboBox.getItems().add(medicament[0].trim() + " ; " + medicament[2].trim() + " ; " + medicament[3].trim());
+	    }
+	}
 
-	public boolean validateFields(LocalDate date, String lieu, String totalBlessesStr, String toTreatStr,
+	private void populateAttentatComboBox(ComboBox<String> comboBox) {
+	    List<String[]> attentat = bdd.recupererListeAttentat();
+	    for (String[] Attentat : attentat) {
+	        comboBox.getItems().add(Attentat[0].trim() + " ; " + Attentat[3].trim() );
+	    }
+	}
+
+	// A faire : décompter les médicament utilisés
+	//			Synchroniser la fiche du patient(attention à l'id)
+	//			bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour selectionner)
+
+	public boolean validateFields(String pnom, String nom, String medPrescrit, int quantite, String infoAttentat,
 			Label errorLabel) {
-		if (date == null) {
-			errorLabel.setText("La date de l'attentat est requise.");
+		
+		if (pnom.isEmpty()||nom.isEmpty()) {
+			errorLabel.setText("Les nom et prénom du patient sont requis.");
 			return false;
 		}
-		if (lieu.isEmpty()) {
-			errorLabel.setText("Le lieu de l'attentat est requis.");
+		if (medPrescrit==null) {
+			errorLabel.setText("Renseigner le médicament");
 			return false;
 		}
+		
+		if (infoAttentat==null) {
+			errorLabel.setText("Renseigner un attentat");
+			return false;
+		}
+
+		if (bdd.prescriptionExiste(pnom, nom)) {
+	        errorLabel.setText("Une prescription pour ce patient existe déjà.");
+	        return false;
+	    }
+		
 		try {
-			int totalBlesses = Integer.parseInt(totalBlessesStr);
-			int toTreat = Integer.parseInt(toTreatStr);
-			if (totalBlesses <= 0 || toTreat <= 0) {
-				errorLabel.setText("Les nombres de blessés et à soigner doivent être positifs.");
+			
+			if (quantite <= 0 ) {
+				errorLabel.setText("Le nombres de médicament doit être positif.");
 				return false;
 			}
 		} catch (NumberFormatException e) {
-			errorLabel.setText("Les nombres de blessés et à soigner doivent être des entiers positifs.");
+			errorLabel.setText("Le nombres de médicament doivt être un entier positif.");
 			return false;
 		}
 		return true;
@@ -421,4 +469,5 @@ public class MedecinView extends Stage {
 		return backButton;
 	}
 
+	
 }
