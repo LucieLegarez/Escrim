@@ -191,6 +191,25 @@ public class BDD {
 		return stocksMedicaments;
 	}
 	
+	public List<String[]> recupererStocksAvions(){
+		List<String[]> stocksAvion = new ArrayList<>();
+		try {
+			PreparedStatement statement = dbConnection.prepareStatement(
+					"SELECT NOM, CONSTRUCTEUR, TYPE_MOTEUR, TYPE_DE_VOL,TONNE_MAX,TAILLE_PORTE_CM,DIMENSIONS_SOUTE_CM,VOLUME_UTILISABLE_M3,EXIGENCE_PISTE_M,PORTEE_CHARGE_KM,PORTEE_VIDE_KM,VITESSE_CROISIERE_KMH,CONSOMMATION_CARBURANT_LH,POSITIONS_PALETTES,etat,lieu_attentat,date_attentat FROM avion");
+			ResultSet resultSet = statement.executeQuery();
+			while (resultSet.next()) {
+				String[] avion = new String[17];
+				for (int i = 0; i < 17; i++) {
+					avion[i] = resultSet.getString(i + 1);
+				}
+				stocksAvion.add(avion);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return stocksAvion;
+	}
+	
 	public int getMedicamentStock(String nom, String dosage, LocalDate dlu) {
 	    try {
 	        PreparedStatement statement = dbConnection.prepareStatement(
@@ -224,7 +243,27 @@ public class BDD {
 	    return false;
 	}
 
-	
+	public boolean updateAvion(String avionNom, String etat, String lieuAttentat, LocalDate dateAttentat) {
+	    try {
+	        // Prépare la requête SQL pour mettre à jour les informations de l'avion
+	        PreparedStatement statement = dbConnection.prepareStatement(
+	            "UPDATE avion SET etat = ?, lieu_attentat = ?, date_attentat = ? WHERE nom = ?");
+
+	        // Associe les valeurs aux paramètres de la requête
+	        statement.setString(1, etat);
+	        statement.setString(2, lieuAttentat);
+	        statement.setDate(3, Date.valueOf(dateAttentat));
+	        statement.setString(4, avionNom);
+
+	        // Exécute la mise à jour et vérifie si les lignes sont affectées
+	        int affectedRows = statement.executeUpdate();
+	        return affectedRows > 0;
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
+
 	
 	/**
 	 * Modifie le mot de passe d'un utilisateur dans la base de données.
@@ -316,13 +355,15 @@ public class BDD {
 	            updateMedicamentStock(produit, dosage, dlu, currentStock - quantity);
 	            
 	            PreparedStatement insertionPrescription = dbConnection.prepareStatement(
-	                "INSERT INTO prescription (PRéNOM, NOM, Id_MEDECIN, NOM_MEDICAMENT, QUANTITÉ, DATE_PRESCRIPTION) VALUES (?, ?, ?, ?, ?, ?)");
+	                "INSERT INTO prescription (PRéNOM, NOM, Id_MEDECIN, NOM_MEDICAMENT, QUANTITÉ, DATE_PRESCRIPTION, lieu_Attentat, date_Attentat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 	            insertionPrescription.setString(1, prenom);
 	            insertionPrescription.setString(2, nom);
 	            insertionPrescription.setString(3, id_med);
 	            insertionPrescription.setString(4, nom_medicament);
 	            insertionPrescription.setInt(5, quantity);
 	            insertionPrescription.setDate(6, Date.valueOf(LocalDate.now()));
+	            insertionPrescription.setString(7, lieuAttentat);
+	            insertionPrescription.setDate(8, Date.valueOf(dateAttentat));
 	            insertionPrescription.executeUpdate();
 	 
 	            decrementBlessesRestants(lieuAttentat, dateAttentat);
@@ -365,20 +406,43 @@ public class BDD {
 		return listeAttentats;
 	}
 	
+
+	
+	public List<String[]> recupererListePrescription(){
+		List<String[]> listePrescriptions = new ArrayList<>();
+		try {
+			PreparedStatement statement = dbConnection.prepareStatement(
+					"SELECT prénom, nom, ID_MEDECIN, nom_medicament, quantité, date_prescription, lieu_Attentat, date_Attentat FROM prescription");
+			ResultSet resultSet = statement.executeQuery();
+			while (resultSet.next()) {
+				String[] prescription = new String[8];
+				for (int i = 0; i < 8; i++) {
+					prescription[i] = resultSet.getString(i + 1);
+				}
+				listePrescriptions.add(prescription);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return listePrescriptions;
+	}
+	
 	public List<String[]> recupererPrescriptionsParPatient(String prenom, String nom) {
 	    List<String[]> prescriptions = new ArrayList<>();
 	    try {
 	        PreparedStatement statement = dbConnection.prepareStatement(
-	            "SELECT DATE_PRESCRIPTION, Id_MEDECIN, NOM_MEDICAMENT, QUANTITÉ FROM prescription WHERE PRéNOM = ? AND NOM = ?");
+	            "SELECT DATE_PRESCRIPTION, Id_MEDECIN, NOM_MEDICAMENT, QUANTITÉ, lieu_Attentat, date_Attentat FROM prescription WHERE PRéNOM = ? AND NOM = ?");
 	        statement.setString(1, prenom);
 	        statement.setString(2, nom);
 	        ResultSet resultSet = statement.executeQuery();
 	        while (resultSet.next()) {
-	            String[] prescription = new String[4];
+	            String[] prescription = new String[6];
 	            prescription[0] = resultSet.getDate("DATE_PRESCRIPTION").toString();
 	            prescription[1] = resultSet.getString("Id_MEDECIN");
 	            prescription[2] = resultSet.getString("NOM_MEDICAMENT");
 	            prescription[3] = String.valueOf(resultSet.getInt("QUANTITÉ"));
+	            prescription[4] = resultSet.getString("lieu_Attentat");
+	            prescription[5] = resultSet.getDate("date_Attentat").toString();
 	            prescriptions.add(prescription);
 	        }
 	    } catch (SQLException e) {

@@ -148,6 +148,10 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
      */
     public void ajouterUtilisateur(String identifiant, String prenom, String nom, LocalDate dateNaissance,
             String mdp, String statut) {
+    	if (dateNaissance.isAfter(LocalDate.now())) {
+    		afficherErreur("La date de naissance ne peux pas être postérieure à la date du jour.");
+    		erreur.setTextFill(Color.RED);
+	    }else {
         database.insererUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
         afficherErreur("Utilisateur " + prenom + " " + nom + " ajouté avec succès");
         erreur.setTextFill(Color.GREEN);
@@ -171,4 +175,4 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
 
         new Thread(pauseTask).start();
     }
-}
+}}

@@ -8,10 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import control.SessionController;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -31,6 +34,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import model.BDD;
 
 /**
@@ -42,8 +46,14 @@ public class LogisticienView extends Stage {
 	private Stage primaryStage;
 	private final String[] nomsColonnes = { "PRODUIT", "DCI", "DOSAGE", "DLU", "QUANTITÉ", "LOT", "CLASSE",
 			"NUM_CAISSE", "CAISSE" };
+	private final String[] nomsColonnesAvions = {
+		    "NOM", "CONSTRUCTEUR", "TYPE_MOTEUR", "TYPE_DE_VOL", "TONNE_MAX", "TAILLE_PORTE_CM", 
+		    "DIMENSIONS_SOUTE_CM", "VOLUME_UTILISABLE_M3", "EXIGENCE_PISTE_M", "PORTEE_CHARGE_KM",
+		    "PORTEE_VIDE_KM", "VITESSE_CROISIERE_KMH", "CONSOMMATION_CARBURANT_LH", "POSITIONS_PALETTES", "etat", "lieu_attentat", "date_attentat"
+		};
 	private final BDD bdd;
 	private ObservableList<String[]> stocksMedicaments;
+	private ObservableList<String[]> stocksAvion;
 	private List<String> produit;
 	private List<String> dci;
 	private List<String> dosage;
@@ -73,6 +83,7 @@ public class LogisticienView extends Stage {
 		addBackButton(mainPane);
 
 		List<String[]> stocksMedicamentsList = bdd.recupererStocksMedicaments();
+		List<String[]> stocksAvionList = bdd.recupererStocksAvions();
 		Map<String, Integer> stockGrouped = groupStocksByProduct(stocksMedicamentsList);
 		List<String> lowStockMessages = generateLowStockMessages(stockGrouped);
 
@@ -105,7 +116,150 @@ public class LogisticienView extends Stage {
 
 		showScene(mainPane, "Stocks de médicaments");
 	}
+	
+	public void afficheVueStocksAvion() {
+		List<String[]> stocksAvionList = bdd.recupererStocksAvions();
+		stocksAvion = FXCollections.observableArrayList(stocksAvionList);
 
+		GridPane mainPane = new GridPane();
+		mainPane.setAlignment(Pos.CENTER);
+		mainPane.setPadding(new Insets(10));
+
+		TableView<String[]> table = createTableViewAvion();
+		mainPane.add(table, 0, 1);
+
+		TextField searchField = createSearchFieldAvion(table);
+		mainPane.add(searchField, 0, 0);
+
+		Button backButton = createBackButton();
+		mainPane.add(backButton, 0, 5);
+
+		showScene(mainPane, "Stocks d'avions");
+	}
+
+	private void createAvionPopUp() {
+		Stage popupStage = new Stage();
+		popupStage.initModality(Modality.APPLICATION_MODAL);
+		Label titleLabel = new Label("Information avion");
+		titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+		titleLabel.setAlignment(Pos.CENTER);
+		popupStage.setTitle("Saisir les informations pour l'avion");
+
+		GridPane gridPane = new GridPane();
+		gridPane.setVgap(10);
+		gridPane.setHgap(10);
+		gridPane.setPadding(new Insets(20));
+
+		// Initialize the error label and add it to the grid
+		Label errorLabel = new Label();
+		errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
+		gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns at the top of the grid
+
+		// Initialize the success label but do not add to grid yet
+		Label successLabel = new Label();
+		successLabel.setTextFill(Color.GREEN);
+
+		ComboBox<String> etatComboBox = new ComboBox<>();
+		etatComboBox.getItems().add("disponible");
+		etatComboBox.getItems().add("occupé");
+		
+	    ComboBox<String> avionComboBox = new ComboBox<>();
+	    populateAvionComboBox(avionComboBox);
+	    
+	    ComboBox<String> AttentatComboBox = new ComboBox<>();
+	    populateAttentatComboBox(AttentatComboBox);
+	    
+		
+		// Add components to the grid
+		gridPane.addRow(1, new Label("Disponibilité avion :"), etatComboBox);
+		gridPane.addRow(2, new Label("Avion :"), avionComboBox);
+		gridPane.addRow(5, new Label("Attentat :"), AttentatComboBox);
+		
+		Button validerButton = new Button("Valider");
+		validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
+		validerButton.setOnAction(e -> {
+		    String etat = etatComboBox.getSelectionModel().getSelectedItem();
+		    String avionUt = avionComboBox.getSelectionModel().getSelectedItem();
+		    String infoAttentat = AttentatComboBox.getSelectionModel().getSelectedItem();
+		    String[] info = infoAttentat.split(" ; ");
+	        String lieuAttentat = info[0];
+	        LocalDate dateAttentat=  LocalDate.parse(info[1]);
+	        String[] avion = avionUt.split(" ; ");
+	        String nomAvion = avion[0];
+	        
+		
+
+		    if (validateFieldsAvion(etat, avionUt, infoAttentat, errorLabel)) {
+		        // Mise à jour de l'avion dans la base de données
+		        if (bdd.updateAvion(nomAvion, etat, lieuAttentat, dateAttentat)) {
+		            successLabel.setText("Mise à jour de l'avion réussie");
+		            gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
+		            // Ferme la fenêtre popup après un délai
+		            new Thread(() -> {
+		                try {
+		                    Thread.sleep(2000);
+		                    Platform.runLater(() -> {
+		                        popupStage.close();
+		                        afficheVueLogisticien(); // Rafraîchir la vue logisticien pour refléter la mise à jour
+		                    });
+		                } catch (InterruptedException ex) {
+		                    ex.printStackTrace();
+		                }
+		            }).start();
+		        } else {
+		            errorLabel.setText("Échec de la mise à jour de l'avion.");
+		        }
+		    } 
+		});
+
+
+		gridPane.addRow(6, validerButton);
+		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+		popupStage.showAndWait();
+	}
+	
+
+
+	private void populateAttentatComboBox(ComboBox<String> comboBox) {
+	    List<String[]> attentat = bdd.recupererListeAttentat();
+	    for (String[] Attentat : attentat) {
+	        comboBox.getItems().add(Attentat[0].trim() + " ; " + Attentat[3].trim() );
+	    }
+	}
+   
+
+    private void populateAvionComboBox(ComboBox<String> comboBox) {
+	    List<String[]> avion = bdd.recupererStocksAvions();
+	    for (String[] Avion : avion) {
+	        comboBox.getItems().add(Avion[0].trim() + " ; " + Avion[14].trim() );
+	    }
+	}
+    
+	// A faire : décompter les médicament utilisés
+	//			Synchroniser la fiche du patient(attention à l'id)
+	//			bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour selectionner)
+
+	public boolean validateFieldsAvion(String etat, String avionUt, String infoAttentat,
+			Label errorLabel) {
+		
+		if (etat ==null) {
+			errorLabel.setText("L'état doit être sélectionné");
+			return false;
+		}
+		if (avionUt==null) {
+			errorLabel.setText("Renseigner l'avion");
+			return false;
+		}
+		
+		if (infoAttentat==null) {
+			errorLabel.setText("Renseigner un attentat");
+			return false;
+		}
+
+		return true;
+	}
+
+	
 	/**
 	 * Filtre les données dans le tableau en fonction du texte saisi.
 	 *
@@ -128,6 +282,21 @@ public class LogisticienView extends Stage {
 		table.setItems(FXCollections.observableArrayList(filteredList));
 	}
 
+	public void filterTableAvion(String searchText, TableView<String[]> table) {
+		if (stocksAvion == null) {
+			return;
+		}
+
+		if (searchText == null || searchText.isEmpty()) {
+			table.setItems(stocksAvion);
+			return;
+		}
+
+		List<String[]> filteredList = stocksAvion.stream()
+				.filter(row -> row[0].toLowerCase().contains(searchText.toLowerCase())).collect(Collectors.toList());
+
+		table.setItems(FXCollections.observableArrayList(filteredList));
+	}
 	/**
 	 * Crée le panneau principal de la vue.
 	 *
@@ -160,7 +329,7 @@ public class LogisticienView extends Stage {
 			this.close();
 		});
 
-		mainPane.add(backButton, 0, 65);
+		mainPane.add(backButton, 0, 50);
 		GridPane.setHalignment(backButton, HPos.LEFT);
 		GridPane.setMargin(backButton, new Insets(10));
 	}
@@ -218,7 +387,7 @@ public class LogisticienView extends Stage {
 			mainPane.add(nouveauxMessagesLabel, 0, 1);
 			GridPane.setMargin(nouveauxMessagesLabel, new Insets(10));
 
-			int rowIndex = 3;
+			int rowIndex = 20;
 
 			for (int i = 0; i < lowStockMessages.size(); i++) {
 				String message = lowStockMessages.get(i);
@@ -304,6 +473,7 @@ public class LogisticienView extends Stage {
 	        gridPane.addRow(5, new Label("Nom de la classe :"), classeTextField);
 
 	        Button validerButton = new Button("Valider");
+			validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
 	        validerButton.setOnAction(e -> {
 	            LocalDate dateLimite = datePicker.getValue();
 	            String lot = lotTextField.getText();
@@ -410,22 +580,36 @@ public class LogisticienView extends Stage {
 	public void addButton(GridPane mainPane) {
 	    Button visualiserStocksButton = new Button("Visualiser les stocks");
 	    Button renseignementAttentatButton = new Button("Ajouter Attentat");
-
+	    Button visualiserStockAvionButton = new Button("Visualiser avions");
+	    Button updateStockAvionButton = new Button("Update avions");
+	    
+	    updateStockAvionButton.setOnAction(event -> {
+	    	createAvionPopUp();
+	    });
+	    
 	    visualiserStocksButton.setOnAction(event -> {
 	        afficheVueStocksMedicaments();
 	    });
 	    renseignementAttentatButton.setOnAction(event -> {
 	        createAttentatInfoPopup();
 	    });
-
-	    mainPane.add(visualiserStocksButton, 80, 0); // Keep existing position for one button
-	    mainPane.add(renseignementAttentatButton, 80, 1); // Place the second button below the first
-
+	    visualiserStockAvionButton.setOnAction(event -> {
+	    	afficheVueStocksAvion();
+	    });
+	    mainPane.add(visualiserStocksButton, 80, 1); // Keep existing position for one button
+	    mainPane.add(renseignementAttentatButton, 80, 3); // Place the second button below the first
+	    mainPane.add(visualiserStockAvionButton, 80, 2);
+	    mainPane.add(updateStockAvionButton, 80, 4);
+	    
 	    GridPane.setHalignment(visualiserStocksButton, HPos.RIGHT);
+	    GridPane.setHalignment(visualiserStockAvionButton, HPos.RIGHT);
 	    GridPane.setHalignment(renseignementAttentatButton, HPos.RIGHT);
+	    GridPane.setHalignment(updateStockAvionButton, HPos.RIGHT);
 
 	    GridPane.setMargin(visualiserStocksButton, new Insets(1));
 	    GridPane.setMargin(renseignementAttentatButton, new Insets(1));
+	    GridPane.setMargin(visualiserStockAvionButton, new Insets(1));
+	    GridPane.setMargin(updateStockAvionButton, new Insets(1));
 	}
 
 	private void createAttentatInfoPopup() {
@@ -460,6 +644,7 @@ public class LogisticienView extends Stage {
 	    gridPane.addRow(4, new Label("Nombre à soigner :"), nbAsoignerTextField);
 
 	    Button validerButton = new Button("Valider");
+		validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
 	    validerButton.setOnAction(e -> {
 	        LocalDate dateAttentat = dateAttentatTextField.getValue();
 	        String lieu = lieuTextField.getText();
@@ -572,6 +757,23 @@ public class LogisticienView extends Stage {
 		return table;
 	}
 
+	public TableView<String[]> createTableViewAvion() {
+		TableView<String[]> table = new TableView<>();
+		for (int i = 0; i < 17; i++) {
+			TableColumn<String[], String> column = new TableColumn<>(nomsColonnesAvions[i]);
+			int columnIndex = i;
+			
+				column.setCellValueFactory(
+						cellData -> new SimpleStringProperty(cellData.getValue()[columnIndex].trim()));
+			
+
+			column.setPrefWidth(200);
+
+			table.getColumns().add(column);
+		}
+		table.getItems().addAll(stocksAvion);
+		return table;
+	}
 	/**
 	 * Crée et retourne un champ de recherche pour filtrer les données dans le
 	 * TableView spécifié.
@@ -594,6 +796,20 @@ public class LogisticienView extends Stage {
 		return searchField;
 	}
 
+	public TextField createSearchFieldAvion(TableView<String[]> table) {
+		TextField searchField = new TextField();
+		searchField.setPromptText("Rechercher un Avion");
+
+		searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+			filterTableAvion(newValue, table);
+		});
+
+		searchField.setOnAction(event -> {
+			String searchText = searchField.getText().trim();
+			filterTableAvion(searchText, table);
+		});
+		return searchField;
+	}
 	/**
 	 * Crée et retourne un bouton de retour vers la vue du logisticien.
 	 *
