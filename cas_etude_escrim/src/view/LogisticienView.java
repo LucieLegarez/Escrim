@@ -41,16 +41,15 @@ import model.BDD;
  * Classe représentant la vue du logisticien.
  */
 public class LogisticienView extends Stage {
-	
-    private Label errorLabel; // To display error messages
+
+	private Label errorLabel; // To display error messages
 	private Stage primaryStage;
 	private final String[] nomsColonnes = { "PRODUIT", "DCI", "DOSAGE", "DLU", "QUANTITÉ", "LOT", "CLASSE",
 			"NUM_CAISSE", "CAISSE" };
-	private final String[] nomsColonnesAvions = {
-		    "NOM", "CONSTRUCTEUR", "TYPE_MOTEUR", "TYPE_DE_VOL", "TONNE_MAX", "TAILLE_PORTE_CM", 
-		    "DIMENSIONS_SOUTE_CM", "VOLUME_UTILISABLE_M3", "EXIGENCE_PISTE_M", "PORTEE_CHARGE_KM",
-		    "PORTEE_VIDE_KM", "VITESSE_CROISIERE_KMH", "CONSOMMATION_CARBURANT_LH", "POSITIONS_PALETTES", "etat", "lieu_attentat", "date_attentat"
-		};
+	private final String[] nomsColonnesAvions = { "NOM", "CONSTRUCTEUR", "TYPE_MOTEUR", "TYPE_DE_VOL", "TONNE_MAX",
+			"TAILLE_PORTE_CM", "DIMENSIONS_SOUTE_CM", "VOLUME_UTILISABLE_M3", "EXIGENCE_PISTE_M", "PORTEE_CHARGE_KM",
+			"PORTEE_VIDE_KM", "VITESSE_CROISIERE_KMH", "CONSOMMATION_CARBURANT_LH", "POSITIONS_PALETTES", "etat",
+			"lieu_attentat", "date_attentat" };
 	private final BDD bdd;
 	private ObservableList<String[]> stocksMedicaments;
 	private ObservableList<String[]> stocksAvion;
@@ -71,7 +70,7 @@ public class LogisticienView extends Stage {
 		this.dci = new ArrayList<>();
 		this.dosage = new ArrayList<>();
 		errorLabel = new Label(); // Initialize the error label
-        errorLabel.setTextFill(Color.RED); // Set error text color
+		errorLabel.setTextFill(Color.RED); // Set error text color
 	}
 
 	/**
@@ -116,7 +115,7 @@ public class LogisticienView extends Stage {
 
 		showScene(mainPane, "Stocks de médicaments");
 	}
-	
+
 	public void afficheVueStocksAvion() {
 		List<String[]> stocksAvionList = bdd.recupererStocksAvions();
 		stocksAvion = FXCollections.observableArrayList(stocksAvionList);
@@ -160,106 +159,167 @@ public class LogisticienView extends Stage {
 		successLabel.setTextFill(Color.GREEN);
 
 		ComboBox<String> etatComboBox = new ComboBox<>();
-		etatComboBox.getItems().add("disponible");
-		etatComboBox.getItems().add("occupé");
-		
-	    ComboBox<String> avionComboBox = new ComboBox<>();
-	    populateAvionComboBox(avionComboBox);
-	    
-	    ComboBox<String> AttentatComboBox = new ComboBox<>();
-	    populateAttentatComboBox(AttentatComboBox);
-	    
-		
-		// Add components to the grid
+		etatComboBox.getItems().addAll("disponible", "occupé");
+
+		ComboBox<String> avionComboBox = new ComboBox<>();
+		populateAvionComboBox(avionComboBox);
+
+		ComboBox<String> attentatComboBox = new ComboBox<>();
+		populateAttentatComboBox(attentatComboBox);
+
 		gridPane.addRow(1, new Label("Disponibilité avion :"), etatComboBox);
 		gridPane.addRow(2, new Label("Avion :"), avionComboBox);
-		gridPane.addRow(5, new Label("Attentat :"), AttentatComboBox);
-		
-		Button validerButton = new Button("Valider");
-		validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
-		validerButton.setOnAction(e -> {
-		    String etat = etatComboBox.getSelectionModel().getSelectedItem();
-		    String avionUt = avionComboBox.getSelectionModel().getSelectedItem();
-		    String infoAttentat = AttentatComboBox.getSelectionModel().getSelectedItem();
-		    String[] info = infoAttentat.split(" ; ");
-	        String lieuAttentat = info[0];
-	        LocalDate dateAttentat=  LocalDate.parse(info[1]);
-	        String[] avion = avionUt.split(" ; ");
-	        String nomAvion = avion[0];
-	        
-		
 
-		    if (validateFieldsAvion(etat, avionUt, infoAttentat, errorLabel)) {
-		        // Mise à jour de l'avion dans la base de données
-		        if (bdd.updateAvion(nomAvion, etat, lieuAttentat, dateAttentat)) {
-		            successLabel.setText("Mise à jour de l'avion réussie");
-		            gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
-		            // Ferme la fenêtre popup après un délai
-		            new Thread(() -> {
-		                try {
-		                    Thread.sleep(2000);
-		                    Platform.runLater(() -> {
-		                        popupStage.close();
-		                        afficheVueLogisticien(); // Rafraîchir la vue logisticien pour refléter la mise à jour
-		                    });
-		                } catch (InterruptedException ex) {
-		                    ex.printStackTrace();
-		                }
-		            }).start();
-		        } else {
-		            errorLabel.setText("Échec de la mise à jour de l'avion.");
-		        }
-		    } 
+		// Initially hide attentat ComboBox
+		attentatComboBox.setVisible(false);
+		Label attentatLabel = new Label("Attentat :");
+		attentatLabel.setVisible(false);
+		gridPane.addRow(5, attentatLabel, attentatComboBox);
+		// Listen to changes in etatComboBox selection
+		etatComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+			if ("occupé".equals(newVal)) {
+				attentatComboBox.setVisible(true);
+				attentatLabel.setVisible(true);
+			} else {
+				attentatComboBox.setVisible(false);
+				attentatLabel.setVisible(false);
+			}
 		});
 
+		Button validerButton = new Button("Valider");
+		validerButton.setStyle(
+				"-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
+		validerButton.setOnAction(e -> {
+			String etat = etatComboBox.getSelectionModel().getSelectedItem();
+			
+			String avionUt = avionComboBox.getSelectionModel().getSelectedItem();
+			String[] avion = avionUt.split(" ; ");
+			String nomAvion = avion[0];
+			String etatAvion = avion[1];
+			if (etat.equals("occupé")) {
+			String infoAttentat = attentatComboBox.getSelectionModel().getSelectedItem();
+			String[] info = infoAttentat.split(" ; ");
+			String lieuAttentat = info[0];
+			LocalDate dateAttentat = LocalDate.parse(info[1]);
+			
+
+			if (validateFieldsAvion(etat, avionUt, etatAvion, infoAttentat, errorLabel)) {
+
+				// Mise à jour de l'avion dans la base de données
+				if (bdd.updateAvion(nomAvion, etat, lieuAttentat, dateAttentat)) {
+					successLabel.setText("Mise à jour de l'avion réussie");
+					gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
+					// Ferme la fenêtre popup après un délai
+					new Thread(() -> {
+						try {
+							Thread.sleep(2000);
+							Platform.runLater(() -> {
+								popupStage.close();
+								afficheVueLogisticien(); // Rafraîchir la vue logisticien pour refléter la mise à jour
+							});
+						} catch (InterruptedException ex) {
+							ex.printStackTrace();
+						}
+					}).start();
+				} else {
+					errorLabel.setText("Échec de la mise à jour de l'avion.");
+				}
+			}}else {
+				
+				String lieuAttentat = "null";
+				LocalDate dateAttentat = LocalDate.parse("1111-11-11");
+				
+
+				if (validateFieldsAviondisp(etat, avionUt, etatAvion, errorLabel)) {
+
+					// Mise à jour de l'avion dans la base de données
+					if (bdd.updateAvion(nomAvion, etat, lieuAttentat, dateAttentat)) {
+						successLabel.setText("Mise à jour de l'avion réussie");
+						gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
+						// Ferme la fenêtre popup après un délai
+						new Thread(() -> {
+							try {
+								Thread.sleep(2000);
+								Platform.runLater(() -> {
+									popupStage.close();
+									afficheVueLogisticien(); // Rafraîchir la vue logisticien pour refléter la mise à jour
+								});
+							} catch (InterruptedException ex) {
+								ex.printStackTrace();
+							}
+						}).start();
+					} else {
+						errorLabel.setText("Échec de la mise à jour de l'avion.");
+					}
+			}}
+		});
 
 		gridPane.addRow(6, validerButton);
 		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
 		popupStage.showAndWait();
 	}
-	
-
 
 	private void populateAttentatComboBox(ComboBox<String> comboBox) {
-	    List<String[]> attentat = bdd.recupererListeAttentat();
-	    for (String[] Attentat : attentat) {
-	        comboBox.getItems().add(Attentat[0].trim() + " ; " + Attentat[3].trim() );
-	    }
+		List<String[]> attentat = bdd.recupererListeAttentat();
+		for (String[] Attentat : attentat) {
+			comboBox.getItems().add(Attentat[0].trim() + " ; " + Attentat[3].trim());
+		}
 	}
-   
 
-    private void populateAvionComboBox(ComboBox<String> comboBox) {
-	    List<String[]> avion = bdd.recupererStocksAvions();
-	    for (String[] Avion : avion) {
-	        comboBox.getItems().add(Avion[0].trim() + " ; " + Avion[14].trim() );
-	    }
+	private void populateAvionComboBox(ComboBox<String> comboBox) {
+		List<String[]> avion = bdd.recupererStocksAvions();
+		for (String[] Avion : avion) {
+			comboBox.getItems().add(Avion[0].trim() + " ; " + Avion[14].trim());
+		}
 	}
-    
+
 	// A faire : décompter les médicament utilisés
-	//			Synchroniser la fiche du patient(attention à l'id)
-	//			bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour selectionner)
+	// Synchroniser la fiche du patient(attention à l'id)
+	// bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour
+	// selectionner)
 
-	public boolean validateFieldsAvion(String etat, String avionUt, String infoAttentat,
-			Label errorLabel) {
-		
-		if (etat ==null) {
+	public boolean validateFieldsAvion(String etat, String avionUt, String etatAvion, String infoAttentat, Label errorLabel) {
+
+		if (etat == null) {
 			errorLabel.setText("L'état doit être sélectionné");
 			return false;
 		}
-		if (avionUt==null) {
+		if (avionUt == null) {
 			errorLabel.setText("Renseigner l'avion");
 			return false;
 		}
-		
-		if (infoAttentat==null) {
+
+		if (infoAttentat == null) {
 			errorLabel.setText("Renseigner un attentat");
+			return false;
+		}
+		
+		if (etat.equals(etatAvion)) {
+			errorLabel.setText("L'avion est déjà occupé");
 			return false;
 		}
 
 		return true;
 	}
 
-	
+	public boolean validateFieldsAviondisp(String etat, String avionUt, String etatAvion, Label errorLabel) {
+
+		if (etat == null) {
+			errorLabel.setText("L'état doit être sélectionné");
+			return false;
+		}
+		if (avionUt == null) {
+			errorLabel.setText("Renseigner l'avion");
+			return false;
+		}
+
+		if (etat.equals(etatAvion)){
+			errorLabel.setText("L'avion est déjà dans cet état");
+			return false;
+		}
+
+		return true;
+	}
 	/**
 	 * Filtre les données dans le tableau en fonction du texte saisi.
 	 *
@@ -297,6 +357,7 @@ public class LogisticienView extends Stage {
 
 		table.setItems(FXCollections.observableArrayList(filteredList));
 	}
+
 	/**
 	 * Crée le panneau principal de la vue.
 	 *
@@ -437,127 +498,127 @@ public class LogisticienView extends Stage {
 	 * @return Le bouton de commande créé.
 	 */
 	public Button createOrderButton(String message, Spinner<Integer> quantitySpinner, int index) {
-	    Button orderButton = new Button("Buy");
-	    orderButton.setOnAction(event -> {
-	        int quantity = quantitySpinner.getValue();
-	        Stage popupStage = new Stage();
-	        popupStage.initModality(Modality.APPLICATION_MODAL);
-	        popupStage.setTitle("Saisir les informations du médicament");
+		Button orderButton = new Button("Buy");
+		orderButton.setOnAction(event -> {
+			int quantity = quantitySpinner.getValue();
+			Stage popupStage = new Stage();
+			popupStage.initModality(Modality.APPLICATION_MODAL);
+			popupStage.setTitle("Saisir les informations du médicament");
 
-	        GridPane gridPane = new GridPane();
-	        gridPane.setVgap(20);
-	        gridPane.setHgap(20);
-	        gridPane.setPadding(new Insets(20));
+			GridPane gridPane = new GridPane();
+			gridPane.setVgap(20);
+			gridPane.setHgap(20);
+			gridPane.setPadding(new Insets(20));
 
-	        // Initialize the error label and add it to the grid
-	        Label errorLabel = new Label();
-	        errorLabel.setTextFill(Color.RED);  // Set the text color to red for visibility
-	        gridPane.add(errorLabel, 0, 0, 2, 1);  // Span across two columns
+			// Initialize the error label and add it to the grid
+			Label errorLabel = new Label();
+			errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
+			gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns
 
-	        // Initialize the success label but do not add to grid yet
-	        Label successLabel = new Label();
-	        successLabel.setTextFill(Color.GREEN);
+			// Initialize the success label but do not add to grid yet
+			Label successLabel = new Label();
+			successLabel.setTextFill(Color.GREEN);
 
-	        // Other UI components
-	        DatePicker datePicker = new DatePicker();
-	        TextField lotTextField = new TextField();
-	        TextField numCaisseTextField = new TextField();
-	        TextField caisseTextField = new TextField();
-	        TextField classeTextField = new TextField();
+			// Other UI components
+			DatePicker datePicker = new DatePicker();
+			TextField lotTextField = new TextField();
+			TextField numCaisseTextField = new TextField();
+			TextField caisseTextField = new TextField();
+			TextField classeTextField = new TextField();
 
-	        // Add components to the grid
-	        gridPane.addRow(1, new Label("Date limite :"), datePicker);
-	        gridPane.addRow(2, new Label("Numéro de lot :"), lotTextField);
-	        gridPane.addRow(3, new Label("Numéro de caisse :"), numCaisseTextField);
-	        gridPane.addRow(4, new Label("Nom de la caisse :"), caisseTextField);
-	        gridPane.addRow(5, new Label("Nom de la classe :"), classeTextField);
+			// Add components to the grid
+			gridPane.addRow(1, new Label("Date limite :"), datePicker);
+			gridPane.addRow(2, new Label("Numéro de lot :"), lotTextField);
+			gridPane.addRow(3, new Label("Numéro de caisse :"), numCaisseTextField);
+			gridPane.addRow(4, new Label("Nom de la caisse :"), caisseTextField);
+			gridPane.addRow(5, new Label("Nom de la classe :"), classeTextField);
 
-	        Button validerButton = new Button("Valider");
-			validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
-	        validerButton.setOnAction(e -> {
-	            LocalDate dateLimite = datePicker.getValue();
-	            String lot = lotTextField.getText();
-	            String numCaisseStr = numCaisseTextField.getText();
-	            String classe = classeTextField.getText();
-	            String caisse = caisseTextField.getText();
+			Button validerButton = new Button("Valider");
+			validerButton.setStyle(
+					"-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
+			validerButton.setOnAction(e -> {
+				LocalDate dateLimite = datePicker.getValue();
+				String lot = lotTextField.getText();
+				String numCaisseStr = numCaisseTextField.getText();
+				String classe = classeTextField.getText();
+				String caisse = caisseTextField.getText();
 
-	            if (validerChampsMed(dateLimite, lot, numCaisseStr, classe, caisse, errorLabel)) {
-	                int numCaisse = Integer.parseInt(numCaisseStr); // Convert numCaisse here after validation
-	                String produit = this.produit.get(index);
-	                String dci = this.dci.get(index);
-	                String dosage = this.dosage.get(index);
+				if (validerChampsMed(dateLimite, lot, numCaisseStr, classe, caisse, errorLabel)) {
+					int numCaisse = Integer.parseInt(numCaisseStr); // Convert numCaisse here after validation
+					String produit = this.produit.get(index);
+					String dci = this.dci.get(index);
+					String dosage = this.dosage.get(index);
 
-	                // Insert into the database
-	                bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
-	                
-	                // Display success message
-	                successLabel.setText("Ajout du médicament " + produit + " réussi");
-	                gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
+					// Insert into the database
+					bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
 
-	                // Close popup after a delay
-	                new Thread(() -> {
-	                    try {
-	                        Thread.sleep(2000);
-	                        Platform.runLater(() -> {
-	                            popupStage.close();
-	                            afficheVueLogisticien();  // Refresh the logistician view to reflect the updated stock
-	                        });
-	                    } catch (InterruptedException ex) {
-	                        ex.printStackTrace();
-	                    }
-	                }).start();
-	            }
-	        });
+					// Display success message
+					successLabel.setText("Ajout du médicament " + produit + " réussi");
+					gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
 
-	        gridPane.addRow(6, validerButton);
-	        popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
-	        popupStage.showAndWait();
-	    });
-	    return orderButton;
+					// Close popup after a delay
+					new Thread(() -> {
+						try {
+							Thread.sleep(2000);
+							Platform.runLater(() -> {
+								popupStage.close();
+								afficheVueLogisticien(); // Refresh the logistician view to reflect the updated stock
+							});
+						} catch (InterruptedException ex) {
+							ex.printStackTrace();
+						}
+					}).start();
+				}
+			});
+
+			gridPane.addRow(6, validerButton);
+			popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+			popupStage.showAndWait();
+		});
+		return orderButton;
 	}
 
-	
-	public boolean validerChampsMed(LocalDate dateLimite, String lot, String numCaisseStr, String classe, String caisse, Label errorLabel) {
-	    if (lot.isEmpty()) {
-	        errorLabel.setText("Le numéro de lot est requis.");
-	        return false;
-	    }
+	public boolean validerChampsMed(LocalDate dateLimite, String lot, String numCaisseStr, String classe, String caisse,
+			Label errorLabel) {
+		if (lot.isEmpty()) {
+			errorLabel.setText("Le numéro de lot est requis.");
+			return false;
+		}
 
-	    if (dateLimite == null) {
-	        errorLabel.setText("La date limite du produit est requise.");
-	        return false;
-	    }
-	    
-	    if (dateLimite.isBefore(LocalDate.now())) {
-	        errorLabel.setText("La date limite du produit ne doit pas être antérieure à la date du jour.");
-	        return false;
-	    }
+		if (dateLimite == null) {
+			errorLabel.setText("La date limite du produit est requise.");
+			return false;
+		}
 
-	    try {
-	        int numCaisse = Integer.parseInt(numCaisseStr);
-	        if (numCaisse <= 0) {
-	            errorLabel.setText("Le numéro de caisse doit être un entier positif.");
-	            return false;
-	        }
-	    } catch (NumberFormatException e) {
-	        errorLabel.setText("Le numéro de caisse doit être un nombre valide.");
-	        return false;
-	    }
+		if (dateLimite.isBefore(LocalDate.now())) {
+			errorLabel.setText("La date limite du produit ne doit pas être antérieure à la date du jour.");
+			return false;
+		}
 
-	    if (classe.isEmpty()) {
-	        errorLabel.setText("La classe du produit est requise.");
-	        return false;
-	    }
+		try {
+			int numCaisse = Integer.parseInt(numCaisseStr);
+			if (numCaisse <= 0) {
+				errorLabel.setText("Le numéro de caisse doit être un entier positif.");
+				return false;
+			}
+		} catch (NumberFormatException e) {
+			errorLabel.setText("Le numéro de caisse doit être un nombre valide.");
+			return false;
+		}
 
-	    if (caisse.isEmpty()) {
-	        errorLabel.setText("Le nom de la caisse est requis.");
-	        return false;
-	    }
+		if (classe.isEmpty()) {
+			errorLabel.setText("La classe du produit est requise.");
+			return false;
+		}
 
-	    return true; // All checks passed
+		if (caisse.isEmpty()) {
+			errorLabel.setText("Le nom de la caisse est requis.");
+			return false;
+		}
+
+		return true; // All checks passed
 	}
 
-	
 	/**
 	 * Définit la disposition des éléments dans le panneau principal.
 	 *
@@ -578,144 +639,145 @@ public class LogisticienView extends Stage {
 	 * @param mainPane Le panneau principal où ajouter le bouton.
 	 */
 	public void addButton(GridPane mainPane) {
-	    Button visualiserStocksButton = new Button("Visualiser les stocks");
-	    Button renseignementAttentatButton = new Button("Ajouter Attentat");
-	    Button visualiserStockAvionButton = new Button("Visualiser avions");
-	    Button updateStockAvionButton = new Button("Update avions");
-	    
-	    updateStockAvionButton.setOnAction(event -> {
-	    	createAvionPopUp();
-	    });
-	    
-	    visualiserStocksButton.setOnAction(event -> {
-	        afficheVueStocksMedicaments();
-	    });
-	    renseignementAttentatButton.setOnAction(event -> {
-	        createAttentatInfoPopup();
-	    });
-	    visualiserStockAvionButton.setOnAction(event -> {
-	    	afficheVueStocksAvion();
-	    });
-	    mainPane.add(visualiserStocksButton, 80, 1); // Keep existing position for one button
-	    mainPane.add(renseignementAttentatButton, 80, 3); // Place the second button below the first
-	    mainPane.add(visualiserStockAvionButton, 80, 2);
-	    mainPane.add(updateStockAvionButton, 80, 4);
-	    
-	    GridPane.setHalignment(visualiserStocksButton, HPos.RIGHT);
-	    GridPane.setHalignment(visualiserStockAvionButton, HPos.RIGHT);
-	    GridPane.setHalignment(renseignementAttentatButton, HPos.RIGHT);
-	    GridPane.setHalignment(updateStockAvionButton, HPos.RIGHT);
+		Button visualiserStocksButton = new Button("Visualiser les stocks");
+		Button renseignementAttentatButton = new Button("Ajouter Attentat");
+		Button visualiserStockAvionButton = new Button("Visualiser avions");
+		Button updateStockAvionButton = new Button("Update avions");
 
-	    GridPane.setMargin(visualiserStocksButton, new Insets(1));
-	    GridPane.setMargin(renseignementAttentatButton, new Insets(1));
-	    GridPane.setMargin(visualiserStockAvionButton, new Insets(1));
-	    GridPane.setMargin(updateStockAvionButton, new Insets(1));
+		updateStockAvionButton.setOnAction(event -> {
+			createAvionPopUp();
+		});
+
+		visualiserStocksButton.setOnAction(event -> {
+			afficheVueStocksMedicaments();
+		});
+		renseignementAttentatButton.setOnAction(event -> {
+			createAttentatInfoPopup();
+		});
+		visualiserStockAvionButton.setOnAction(event -> {
+			afficheVueStocksAvion();
+		});
+		mainPane.add(visualiserStocksButton, 80, 1); // Keep existing position for one button
+		mainPane.add(renseignementAttentatButton, 80, 3); // Place the second button below the first
+		mainPane.add(visualiserStockAvionButton, 80, 2);
+		mainPane.add(updateStockAvionButton, 80, 4);
+
+		GridPane.setHalignment(visualiserStocksButton, HPos.RIGHT);
+		GridPane.setHalignment(visualiserStockAvionButton, HPos.RIGHT);
+		GridPane.setHalignment(renseignementAttentatButton, HPos.RIGHT);
+		GridPane.setHalignment(updateStockAvionButton, HPos.RIGHT);
+
+		GridPane.setMargin(visualiserStocksButton, new Insets(1));
+		GridPane.setMargin(renseignementAttentatButton, new Insets(1));
+		GridPane.setMargin(visualiserStockAvionButton, new Insets(1));
+		GridPane.setMargin(updateStockAvionButton, new Insets(1));
 	}
 
 	private void createAttentatInfoPopup() {
-	    Stage popupStage = new Stage();
-	    popupStage.initModality(Modality.APPLICATION_MODAL);
-	    popupStage.setTitle("Saisir les informations de l'attentat");
+		Stage popupStage = new Stage();
+		popupStage.initModality(Modality.APPLICATION_MODAL);
+		popupStage.setTitle("Saisir les informations de l'attentat");
 
-	    GridPane gridPane = new GridPane();
-	    gridPane.setVgap(10);
-	    gridPane.setHgap(10);
-	    gridPane.setPadding(new Insets(20));
+		GridPane gridPane = new GridPane();
+		gridPane.setVgap(10);
+		gridPane.setHgap(10);
+		gridPane.setPadding(new Insets(20));
 
-	    // Initialize the error label and add it to the grid
-	    Label errorLabel = new Label();
-	    errorLabel.setTextFill(Color.RED);  // Set the text color to red for visibility
-	    gridPane.add(errorLabel, 0, 0, 2, 1);  // Span across two columns at the top of the grid
+		// Initialize the error label and add it to the grid
+		Label errorLabel = new Label();
+		errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
+		gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns at the top of the grid
 
-	    // Initialize the success label but do not add to grid yet
-	    Label successLabel = new Label();
-	    successLabel.setTextFill(Color.GREEN);
+		// Initialize the success label but do not add to grid yet
+		Label successLabel = new Label();
+		successLabel.setTextFill(Color.GREEN);
 
-	    // Other UI components
-	    DatePicker dateAttentatTextField = new DatePicker();
-	    TextField lieuTextField = new TextField();
-	    TextField totBlessesTextField = new TextField();
-	    TextField nbAsoignerTextField = new TextField();
+		// Other UI components
+		DatePicker dateAttentatTextField = new DatePicker();
+		TextField lieuTextField = new TextField();
+		TextField totBlessesTextField = new TextField();
+		TextField nbAsoignerTextField = new TextField();
 
-	    // Add components to the grid
-	    gridPane.addRow(1, new Label("Date de l'attentat :"), dateAttentatTextField);
-	    gridPane.addRow(2, new Label("Lieu de l'attentat :"), lieuTextField);
-	    gridPane.addRow(3, new Label("Total de blessés :"), totBlessesTextField);
-	    gridPane.addRow(4, new Label("Nombre à soigner :"), nbAsoignerTextField);
+		// Add components to the grid
+		gridPane.addRow(1, new Label("Date de l'attentat :"), dateAttentatTextField);
+		gridPane.addRow(2, new Label("Lieu de l'attentat :"), lieuTextField);
+		gridPane.addRow(3, new Label("Total de blessés :"), totBlessesTextField);
+		gridPane.addRow(4, new Label("Nombre à soigner :"), nbAsoignerTextField);
 
-	    Button validerButton = new Button("Valider");
-		validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
-	    validerButton.setOnAction(e -> {
-	        LocalDate dateAttentat = dateAttentatTextField.getValue();
-	        String lieu = lieuTextField.getText();
-	        String totBlessesStr = totBlessesTextField.getText();
-	        String nbAsoignerStr = nbAsoignerTextField.getText();
+		Button validerButton = new Button("Valider");
+		validerButton.setStyle(
+				"-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5");
+		validerButton.setOnAction(e -> {
+			LocalDate dateAttentat = dateAttentatTextField.getValue();
+			String lieu = lieuTextField.getText();
+			String totBlessesStr = totBlessesTextField.getText();
+			String nbAsoignerStr = nbAsoignerTextField.getText();
 
-	        if (validateFields(dateAttentat, lieu, totBlessesStr, nbAsoignerStr, errorLabel)) {
-	            int totBlesses = Integer.parseInt(totBlessesStr);
-	            int nbAsoigner = Integer.parseInt(nbAsoignerStr);
+			if (validateFields(dateAttentat, lieu, totBlessesStr, nbAsoignerStr, errorLabel)) {
+				int totBlesses = Integer.parseInt(totBlessesStr);
+				int nbAsoigner = Integer.parseInt(nbAsoignerStr);
 
-	            // Insert into the database
-	            bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
-	            
-	            // Display success message
-	            successLabel.setText("Ajout de l'attentat à " + lieu + " réussi");
-	            gridPane.add(successLabel, 0, 6, 2, 1);  // Span across both columns
+				// Insert into the database
+				bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
 
-	            // Close popup after a delay
-	            new Thread(() -> {
-	                try {
-	                    Thread.sleep(2000);
-	                    Platform.runLater(() -> {
-	                        popupStage.close();
-	                        afficheVueLogisticien();  // Refresh the logistician view to reflect the updated stock
-	                    });
-	                } catch (InterruptedException ex) {
-	                    ex.printStackTrace();
-	                }
-	            }).start();
-	        }
-	    });
+				// Display success message
+				successLabel.setText("Ajout de l'attentat à " + lieu + " réussi");
+				gridPane.add(successLabel, 0, 6, 2, 1); // Span across both columns
 
-	    gridPane.addRow(5, validerButton);
-	    popupStage.setScene(new Scene(gridPane, 450, 350));  // Adjust the scene size if necessary
-	    popupStage.showAndWait();
+				// Close popup after a delay
+				new Thread(() -> {
+					try {
+						Thread.sleep(2000);
+						Platform.runLater(() -> {
+							popupStage.close();
+							afficheVueLogisticien(); // Refresh the logistician view to reflect the updated stock
+						});
+					} catch (InterruptedException ex) {
+						ex.printStackTrace();
+					}
+				}).start();
+			}
+		});
+
+		gridPane.addRow(5, validerButton);
+		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+		popupStage.showAndWait();
 	}
 
-	public boolean validateFields(LocalDate date, String lieu, String totalBlessesStr, String toTreatStr, Label errorLabel) {
-	    if (date == null) {
-	        errorLabel.setText("La date de l'attentat est requise.");
-	        return false;
-	    }
-	    
-	    if (date.isAfter(LocalDate.now())) {
-	        errorLabel.setText("La date de l'attentat ne doit pas être postérieure à la date du jour.");
-	        return false;
-	    }
-	    
-	    if (lieu.isEmpty()) {
-	        errorLabel.setText("Le lieu de l'attentat est requis.");
-	        return false;
-	    }
-	    try {
-	        int totalBlesses = Integer.parseInt(totalBlessesStr);
-	        int toTreat = Integer.parseInt(toTreatStr);
-	        if (totalBlesses <= 0 || toTreat <= 0) {
-	            errorLabel.setText("Les nombres de blessés et à soigner doivent être positifs.");
-	            return false;
-	        }
-	        if (totalBlesses < toTreat ) {
-	            errorLabel.setText("Les nombres de blessés à soigner doit être égal ou plus petit que le total des blessés.");
-	            return false;
-	        }
-	    } catch (NumberFormatException e) {
-	        errorLabel.setText("Les nombres de blessés et à soigner doivent être des entiers positifs.");
-	        return false;
-	    }
-	    return true;
+	public boolean validateFields(LocalDate date, String lieu, String totalBlessesStr, String toTreatStr,
+			Label errorLabel) {
+		if (date == null) {
+			errorLabel.setText("La date de l'attentat est requise.");
+			return false;
+		}
+
+		if (date.isAfter(LocalDate.now())) {
+			errorLabel.setText("La date de l'attentat ne doit pas être postérieure à la date du jour.");
+			return false;
+		}
+
+		if (lieu.isEmpty()) {
+			errorLabel.setText("Le lieu de l'attentat est requis.");
+			return false;
+		}
+		try {
+			int totalBlesses = Integer.parseInt(totalBlessesStr);
+			int toTreat = Integer.parseInt(toTreatStr);
+			if (totalBlesses <= 0 || toTreat <= 0) {
+				errorLabel.setText("Les nombres de blessés et à soigner doivent être positifs.");
+				return false;
+			}
+			if (totalBlesses < toTreat) {
+				errorLabel.setText(
+						"Les nombres de blessés à soigner doit être égal ou plus petit que le total des blessés.");
+				return false;
+			}
+		} catch (NumberFormatException e) {
+			errorLabel.setText("Les nombres de blessés et à soigner doivent être des entiers positifs.");
+			return false;
+		}
+		return true;
 	}
-
-
 
 	/**
 	 * Affiche une scène avec le panneau principal et le titre spécifiés.
@@ -762,10 +824,8 @@ public class LogisticienView extends Stage {
 		for (int i = 0; i < 17; i++) {
 			TableColumn<String[], String> column = new TableColumn<>(nomsColonnesAvions[i]);
 			int columnIndex = i;
-			
-				column.setCellValueFactory(
-						cellData -> new SimpleStringProperty(cellData.getValue()[columnIndex].trim()));
-			
+
+			column.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue()[columnIndex].trim()));
 
 			column.setPrefWidth(200);
 
@@ -774,6 +834,7 @@ public class LogisticienView extends Stage {
 		table.getItems().addAll(stocksAvion);
 		return table;
 	}
+
 	/**
 	 * Crée et retourne un champ de recherche pour filtrer les données dans le
 	 * TableView spécifié.
@@ -810,6 +871,7 @@ public class LogisticienView extends Stage {
 		});
 		return searchField;
 	}
+
 	/**
 	 * Crée et retourne un bouton de retour vers la vue du logisticien.
 	 *
@@ -828,8 +890,5 @@ public class LogisticienView extends Stage {
 		});
 		return backButton;
 	}
-	
-	
-	
-}
 
+}
