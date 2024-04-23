@@ -53,11 +53,12 @@ public class ChangerMdpController implements EventHandler<ActionEvent> {
     @Override
     public void handle(ActionEvent event) {
         String identifiant = textIdentifiant.getText();
+        String identifiantEnMinuscule = identifiant.toLowerCase();
         LocalDate localDateNaissance = textDateNaissance.getValue();
         String mdp = textMdp.getText();
 
-        if (validerChamps(identifiant, localDateNaissance, mdp)) {
-            changerMotDePasse(identifiant, localDateNaissance, mdp);
+        if (validerChamps(identifiantEnMinuscule, localDateNaissance, mdp)) {
+            changerMotDePasse(identifiantEnMinuscule, localDateNaissance, mdp);
         }
     }
 
@@ -111,12 +112,13 @@ public class ChangerMdpController implements EventHandler<ActionEvent> {
      */
     public void changerMotDePasse(String identifiant, LocalDate dateNaissance, String mdp) {
         Date dateNaissanceSQL = Date.valueOf(dateNaissance);
-        boolean identifiantValide = database.verifierIdentifiantEtDateNaissance(identifiant, dateNaissanceSQL);
+        String identifiantEnMinuscule = identifiant.toLowerCase();
+        boolean identifiantValide = database.verifierIdentifiantEtDateNaissance(identifiantEnMinuscule, dateNaissanceSQL);
 
         if (!identifiantValide) {
             afficherErreur("Identifiant et/ou date de naissance incorrects.");
         } else {
-            boolean mdpModifie = database.modifierMotDePasse(identifiant, mdp);
+            boolean mdpModifie = database.modifierMotDePasse(identifiantEnMinuscule, mdp);
 
             if (mdpModifie) {
                 afficherErreur("Mot de passe modifié avec succès.");

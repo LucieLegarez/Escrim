@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -260,8 +261,8 @@ public class MedecinView extends Stage {
 	 */
 	public void addButton(GridPane mainPane) {
 		Button visualiserAttentatButton = new Button("Informations Attentats");
-		Button renseignementPatientButton = new Button("Créer Prescritption");
-		Button visualiserPrescriptionButton = new Button("Consulter Prescritption");
+		Button renseignementPatientButton = new Button("Créer Prescription");
+		Button visualiserPrescriptionButton = new Button("Consulter Prescription");
 
 		// Définition de la taille et du style des boutons
 		 // Taille des boutons pour être carrés
@@ -325,7 +326,7 @@ public class MedecinView extends Stage {
 		// Other UI components
 		TextField prenomTextField = new TextField();
 		TextField nomTextField = new TextField();
-
+		
 		
 	    ComboBox<String> medicamentComboBox = new ComboBox<>();
 	    populateMedicamentComboBox(medicamentComboBox);
@@ -342,6 +343,7 @@ public class MedecinView extends Stage {
 		gridPane.addRow(4, new Label("Quantité :"), quantiteSpinner);
 		gridPane.addRow(5, new Label("Attentat :"), AttentatComboBox);
 		
+		
 		Button validerButton = new Button("Valider");
 		validerButton.setStyle("-fx-background-color: linear-gradient(#8a2be2, #9370db);-fx-pref-width: 75px;-fx-pref-height: 2px; -fx-text-fill: white; -fx-font-size: 8pt; -fx-background-radius: 5; -fx-padding: 5;");
 		validerButton.setOnAction(e -> {
@@ -353,6 +355,7 @@ public class MedecinView extends Stage {
 	        int quantite = quantiteSpinner.getValue();
 	        String nomEnMinuscules = nom.toLowerCase();
 			String pnomEnMinuscule = pnom.toLowerCase();
+			
 			if (validateFields(pnomEnMinuscule, nomEnMinuscules, medPrescrit, quantite, infoAttentat, errorLabel)) {
 				
 				String id_med = SessionController.getInstance().getUserId();
@@ -405,7 +408,7 @@ public class MedecinView extends Stage {
 	//			bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour selectionner)
 
 	public boolean validateFields(String pnom, String nom, String medPrescrit, int quantite, String infoAttentat,
-			Label errorLabel) {
+			 Label errorLabel) {
 		
 		if (pnom.isEmpty()||nom.isEmpty()) {
 			errorLabel.setText("Les nom et prénom du patient sont requis.");

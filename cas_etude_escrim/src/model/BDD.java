@@ -431,7 +431,7 @@ public class BDD {
 	    List<String[]> prescriptions = new ArrayList<>();
 	    try {
 	        PreparedStatement statement = dbConnection.prepareStatement(
-	            "SELECT DATE_PRESCRIPTION, Id_MEDECIN, NOM_MEDICAMENT, QUANTITÉ, lieu_Attentat, date_Attentat FROM prescription WHERE PRéNOM = ? AND NOM = ?");
+	            "SELECT DATE_PRESCRIPTION, Id_MEDECIN, NOM_MEDICAMENT, QUANTITÉ, lieu_Attentat, date_Attentat FROM prescription WHERE PRéNOM = ? AND NOM = ? ");
 	        statement.setString(1, prenom);
 	        statement.setString(2, nom);
 	        ResultSet resultSet = statement.executeQuery();

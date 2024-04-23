@@ -54,8 +54,9 @@ public class ConnexionController implements EventHandler<ActionEvent> {
      */
     public void handle(ActionEvent e) {
         String identifiant = this.textId.getText();
+        String identifiantEnMinuscule = identifiant.toLowerCase();
         String mdp = this.textMdp.getText();
-        String[] utilisateur = this.database.stockerUtilisateurParIdentifiant(identifiant);
+        String[] utilisateur = this.database.stockerUtilisateurParIdentifiant(identifiantEnMinuscule);
 
         if (utilisateur == null || utilisateur[0] == null || !utilisateur[0].equals("true")) {
             afficherErreur("Cet identifiant n'existe pas.");
@@ -84,13 +85,15 @@ public class ConnexionController implements EventHandler<ActionEvent> {
         afficherErreur("Authentification réussie.");
         this.erreur.setTextFill(Color.GREEN);
         String prenom = utilisateur[1].trim();
+        String pnomEnMinuscule = prenom.toLowerCase();
         String nom = utilisateur[2].trim();
+        String nomEnMinuscule = nom.toLowerCase();
         Date dateNaissance = Date.valueOf(utilisateur[3].trim());
-        String userId = prenom + "."+ nom;
+        String userId = pnomEnMinuscule + "."+ nomEnMinuscule;
         SessionController.getInstance().setUserId(userId);
         
         if ((utilisateur[5].trim()).equals("Blessé")) {
-            afficherVueBlesse(prenom, nom, dateNaissance);
+            afficherVueBlesse(pnomEnMinuscule, nomEnMinuscule, dateNaissance);
         } else if ((utilisateur[5].trim()).equals("Médecin")) {
             afficherVueMedecin();
         } else if ((utilisateur[5].trim()).equals("Logisticien")) {

@@ -1,6 +1,7 @@
 package view;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class BlesseView extends Stage {
      *
      * @param primaryStage La fenêtre principale de l'application.
      */
+    
     public BlesseView(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.ficheRenseignement = new Label("Fiche Renseignements :");

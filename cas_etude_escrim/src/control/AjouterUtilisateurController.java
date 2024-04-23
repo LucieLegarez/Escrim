@@ -75,7 +75,9 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         if (!utilisateur[0].equals("false")) {
             afficherErreur("Un utilisateur avec cet identifiant existe déjà.");
         } else {
-            ajouterUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
+        	String nomEnMinuscules = nom.toLowerCase();
+			String pnomEnMinuscule = prenom.toLowerCase();
+            ajouterUtilisateur(identifiant, pnomEnMinuscule, nomEnMinuscules, dateNaissance, mdp, statut);
         }
     }
 
@@ -152,7 +154,10 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
     		afficherErreur("La date de naissance ne peux pas être postérieure à la date du jour.");
     		erreur.setTextFill(Color.RED);
 	    }else {
-        database.insererUtilisateur(identifiant, prenom, nom, dateNaissance, mdp, statut);
+	    	String nomEnMinuscules = nom.toLowerCase();
+			String pnomEnMinuscule = prenom.toLowerCase();
+			String identifiantEnMinuscule = identifiant.toLowerCase();
+        database.insererUtilisateur(identifiantEnMinuscule, pnomEnMinuscule, nomEnMinuscules, dateNaissance, mdp, statut);
         afficherErreur("Utilisateur " + prenom + " " + nom + " ajouté avec succès");
         erreur.setTextFill(Color.GREEN);
 
