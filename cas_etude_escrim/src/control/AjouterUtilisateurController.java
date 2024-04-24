@@ -25,10 +25,9 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
     private TextField textMdp;
     private DatePicker datePicker;
     private ComboBox<String> statutComboBox;
-    private TextField lieuAt;
-    private DatePicker dateAt;
     private Label erreur;
     private Stage primaryStage;
+    
 
     /**
      * Constructeur du contrôleur d'ajout d'utilisateur.
@@ -42,17 +41,16 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
      * @param primaryStage Stage principal de l'application
      */
     public AjouterUtilisateurController(TextField textPrenom, TextField textNom, TextField textMdp,
-            DatePicker datePicker, ComboBox<String> statutComboBox,TextField lieuAt,DatePicker dateAt, Label erreur, Stage primaryStage) {
+            DatePicker datePicker, ComboBox<String> statutComboBox, Label erreur, Stage primaryStage) {
         this.textPrenom = textPrenom;
         this.textNom = textNom;
         this.textMdp = textMdp;
         this.datePicker = datePicker;
         this.statutComboBox = statutComboBox;
-        this.lieuAt=lieuAt;
-        this.dateAt=dateAt;
         this.erreur = erreur;
         this.primaryStage = primaryStage;
         database = new BDD();
+       
     }
 
     /**
@@ -70,9 +68,9 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
         }
 
         String identifiant = genererIdentifiant(prenom, nom);
-        String[] utilisateur = database.stockerUtilisateurAPartirNom(identifiant);
+        String[] utilisateur = database.stockerUtilisateurAPartirNom(identifiant.toLowerCase());
         
-        if (!utilisateur[0].equals("false")) {
+        if (!utilisateur[0].toLowerCase().equals("false")) {
             afficherErreur("Un utilisateur avec cet identifiant existe déjà.");
         } else {
         	String nomEnMinuscules = nom.toLowerCase();
@@ -80,7 +78,6 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
             ajouterUtilisateur(identifiant, pnomEnMinuscule, nomEnMinuscules, dateNaissance, mdp, statut);
         }
     }
-
 
     /**
      * Valide les champs saisis par l'utilisateur.
@@ -111,9 +108,6 @@ public class AjouterUtilisateurController implements EventHandler<ActionEvent> {
             afficherErreur("Le mot de passe doit contenir au moins 5 caractères.");
             return false;
         }
-
-        String statut = statutComboBox.getValue();
-        
 
         return true;
     }

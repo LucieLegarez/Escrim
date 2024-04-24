@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -210,6 +209,14 @@ public class BDD {
 		return stocksAvion;
 	}
 	
+	/**
+	 * Récupère la quantité en stock d'un médicament spécifié par son nom, dosage et date limite d'utilisation.
+	 * 
+	 * @param nom     Le nom du médicament.
+	 * @param dosage  Le dosage du médicament.
+	 * @param dlu     La date limite d'utilisation du médicament.
+	 * @return La quantité en stock du médicament, ou -1 en cas d'erreur ou si le médicament n'est pas trouvé.
+	 */
 	public int getMedicamentStock(String nom, String dosage, LocalDate dlu) {
 	    try {
 	        PreparedStatement statement = dbConnection.prepareStatement(
@@ -226,7 +233,16 @@ public class BDD {
 	    }
 	    return -1; // Retourne -1 en cas d'erreur ou si le médicament n'est pas trouvé
 	}
-	
+
+	/**
+	 * Met à jour la quantité en stock d'un médicament spécifié par son nom, dosage et date limite d'utilisation.
+	 * 
+	 * @param nom         Le nom du médicament.
+	 * @param dosage      Le dosage du médicament.
+	 * @param dlu         La date limite d'utilisation du médicament.
+	 * @param newQuantity La nouvelle quantité en stock.
+	 * @return true si la mise à jour a réussi, sinon false.
+	 */
 	public boolean updateMedicamentStock(String nom, String dosage, LocalDate dlu, int newQuantity) {
 	    try {
 	        PreparedStatement statement = dbConnection.prepareStatement(
@@ -243,6 +259,15 @@ public class BDD {
 	    return false;
 	}
 
+	/**
+	 * Met à jour les informations d'un avion dans la base de données.
+	 * 
+	 * @param avionNom       Le nom de l'avion.
+	 * @param etat           Le nouvel état de l'avion.
+	 * @param lieuAttentat   Le lieu de l'attentat (s'il y a eu un attentat).
+	 * @param dateAttentat   La date de l'attentat (s'il y a eu un attentat).
+	 * @return true si la mise à jour a réussi, sinon false.
+	 */
 	public boolean updateAvion(String avionNom, String etat, String lieuAttentat, LocalDate dateAttentat) {
 	    try {
 	        // Prépare la requête SQL pour mettre à jour les informations de l'avion
@@ -264,7 +289,6 @@ public class BDD {
 	    return false;
 	}
 
-	
 	/**
 	 * Modifie le mot de passe d'un utilisateur dans la base de données.
 	 * 
@@ -339,6 +363,17 @@ public class BDD {
 	    }
 	}
 	
+	/**
+	 * Insère une prescription dans la base de données pour un patient donné.
+	 * 
+	 * @param prenom        Le prénom du patient.
+	 * @param nom           Le nom du patient.
+	 * @param nom_medicament   Le nom et dosage du médicament sous forme de chaîne, séparés par " ; ", suivi de la date limite d'utilisation au format "yyyy-MM-dd".
+	 * @param quantity      La quantité prescrite du médicament.
+	 * @param id_med        L'identifiant du médecin prescrivant le médicament.
+	 * @param infoAttentat  Les informations sur l'attentat (lieu et date) séparées par " ; ".
+	 * @return Un message de succès si la prescription est réussie, ou une indication du nombre de produits disponibles si la quantité demandée dépasse le stock.
+	 */
 	public String insererPrescription(String prenom, String nom, String nom_medicament, int quantity, String id_med, String infoAttentat) {
 	    try {
 	        // Supposons que les détails du médicament sont correctement extraits ici
@@ -365,7 +400,7 @@ public class BDD {
 	            insertionPrescription.setString(7, lieuAttentat);
 	            insertionPrescription.setDate(8, Date.valueOf(dateAttentat));
 	            insertionPrescription.executeUpdate();
-	 
+
 	            decrementBlessesRestants(lieuAttentat, dateAttentat);
 	            return "Success";
 	        } else {
@@ -378,6 +413,13 @@ public class BDD {
 	}
 	
 	
+	/**
+	 * Décrémente le nombre de blessés restants à soigner lors d'un attentat donné.
+	 * 
+	 * @param lieuAttentat  Le lieu de l'attentat.
+	 * @param dateAttentat  La date de l'attentat.
+	 * @throws SQLException Si une erreur SQL survient lors de l'exécution de la requête.
+	 */
 	public void decrementBlessesRestants(String lieuAttentat, LocalDate dateAttentat) throws SQLException {
 	    PreparedStatement updateAttentat = dbConnection.prepareStatement(
 	        "UPDATE attentat SET Pers_à_soigner = Pers_à_soigner - 1 WHERE lieu = ? AND date_evenement = ?");
@@ -385,48 +427,74 @@ public class BDD {
 	    updateAttentat.setDate(2, Date.valueOf(dateAttentat));
 	    updateAttentat.executeUpdate();
 	}
-	
 
+
+	/**
+	 * Récupère la liste des attentats enregistrés dans la base de données.
+	 * Chaque élément de la liste est un tableau de chaînes de caractères contenant les détails d'un attentat.
+	 * Les détails comprennent le lieu de l'attentat, le nombre total de blessés, le nombre de personnes à soigner
+	 * et la date de l'événement.
+	 * 
+	 * @return La liste des attentats, où chaque élément est un tableau de chaînes de caractères.
+	 */
 	public List<String[]> recupererListeAttentat() {
-		List<String[]> listeAttentats = new ArrayList<>();
-		try {
-			PreparedStatement statement = dbConnection.prepareStatement(
-					"SELECT lieu, Tot_blessés, Pers_à_soigner, date_evenement FROM attentat");
-			ResultSet resultSet = statement.executeQuery();
-			while (resultSet.next()) {
-				String[] attentat = new String[4];
-				for (int i = 0; i < 4; i++) {
-					attentat[i] = resultSet.getString(i + 1);
-				}
-				listeAttentats.add(attentat);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return listeAttentats;
+	    List<String[]> listeAttentats = new ArrayList<>();
+	    try {
+	        PreparedStatement statement = dbConnection.prepareStatement(
+	                "SELECT lieu, Tot_blessés, Pers_à_soigner, date_evenement FROM attentat");
+	        ResultSet resultSet = statement.executeQuery();
+	        while (resultSet.next()) {
+	            String[] attentat = new String[4];
+	            for (int i = 0; i < 4; i++) {
+	                attentat[i] = resultSet.getString(i + 1);
+	            }
+	            listeAttentats.add(attentat);
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return listeAttentats;
 	}
-	
 
 	
+	/**
+	 * Récupère la liste des prescriptions enregistrées dans la base de données.
+	 * Chaque élément de la liste est un tableau de chaînes de caractères contenant les détails d'une prescription.
+	 * Les détails comprennent le prénom du patient, le nom du patient, l'identifiant du médecin, le nom du médicament,
+	 * la quantité prescrite, la date de la prescription, le lieu de l'attentat associé et la date de l'attentat.
+	 * 
+	 * @return La liste des prescriptions, où chaque élément est un tableau de chaînes de caractères.
+	 */
 	public List<String[]> recupererListePrescription(){
-		List<String[]> listePrescriptions = new ArrayList<>();
-		try {
-			PreparedStatement statement = dbConnection.prepareStatement(
-					"SELECT prénom, nom, ID_MEDECIN, nom_medicament, quantité, date_prescription, lieu_Attentat, date_Attentat FROM prescription");
-			ResultSet resultSet = statement.executeQuery();
-			while (resultSet.next()) {
-				String[] prescription = new String[8];
-				for (int i = 0; i < 8; i++) {
-					prescription[i] = resultSet.getString(i + 1);
-				}
-				listePrescriptions.add(prescription);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return listePrescriptions;
+	    List<String[]> listePrescriptions = new ArrayList<>();
+	    try {
+	        PreparedStatement statement = dbConnection.prepareStatement(
+	                "SELECT prénom, nom, ID_MEDECIN, nom_medicament, quantité, date_prescription, lieu_Attentat, date_Attentat FROM prescription");
+	        ResultSet resultSet = statement.executeQuery();
+	        while (resultSet.next()) {
+	            String[] prescription = new String[8];
+	            for (int i = 0; i < 8; i++) {
+	                prescription[i] = resultSet.getString(i + 1);
+	            }
+	            listePrescriptions.add(prescription);
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return listePrescriptions;
 	}
+
 	
+	/**
+	 * Récupère la liste des prescriptions pour un patient donné.
+	 * Chaque élément de la liste est un tableau de chaînes de caractères contenant les détails d'une prescription.
+	 * Les détails comprennent la date de la prescription, l'identifiant du médecin, le nom du médicament prescrit,
+	 * la quantité prescrite, le lieu de l'attentat associé et la date de l'attentat.
+	 * 
+	 * @param prenom Le prénom du patient pour lequel récupérer les prescriptions.
+	 * @param nom Le nom du patient pour lequel récupérer les prescriptions.
+	 * @return La liste des prescriptions du patient spécifié, où chaque élément est un tableau de chaînes de caractères.
+	 */
 	public List<String[]> recupererPrescriptionsParPatient(String prenom, String nom) {
 	    List<String[]> prescriptions = new ArrayList<>();
 	    try {
@@ -450,23 +518,6 @@ public class BDD {
 	    }
 	    return prescriptions;
 	}
-
-	public boolean prescriptionExiste(String prenom, String nom) {
-	    try {
-	        PreparedStatement statement = dbConnection.prepareStatement(
-	            "SELECT COUNT(*) FROM prescription WHERE PRéNOM = ? AND NOM = ? ");
-	        statement.setString(1, prenom);
-	        statement.setString(2, nom);
-	        ResultSet resultSet = statement.executeQuery();
-	        if (resultSet.next()) {
-	            return resultSet.getInt(1) > 0;  // retourne vrai si au moins une entrée existe
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    return false;  // retourne faux si aucune entrée trouvée ou erreur
-	}
-
 
 	
 }

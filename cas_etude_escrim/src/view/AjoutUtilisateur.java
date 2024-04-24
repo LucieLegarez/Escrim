@@ -26,8 +26,6 @@ public class AjoutUtilisateur extends Stage {
     private TextField textMdp;
     private DatePicker datePicker;
     private ComboBox<String> statutComboBox;
-    private TextField textlieuAttentat;
-    private DatePicker dateAttentatP;
     private Label prenom;
     private Label nom;
     private Label mdp;
@@ -35,9 +33,6 @@ public class AjoutUtilisateur extends Stage {
     private Label dateNaissance;
     private Label dateInfo;
     private Label statut;
-    private Label lieuAttentat;
-    private Label dateAttentat;
-    private Label dateInfoAtt;
     private Label erreur;
     private Button boutonAjouter;
     private Stage primaryStage;
@@ -53,8 +48,6 @@ public class AjoutUtilisateur extends Stage {
         textMdp = new TextField();
         datePicker = new DatePicker();
         statutComboBox = new ComboBox<>();
-        textlieuAttentat = new TextField();
-        dateAttentatP = new DatePicker();
         prenom = new Label("Prénom :");
         nom = new Label("Nom :");
         mdp = new Label("Mot de passe :");
@@ -166,7 +159,7 @@ public class AjoutUtilisateur extends Stage {
 
 		boutonAjouter.setOnAction((event) -> {
 			AjouterUtilisateurController ajoutController = new AjouterUtilisateurController(textPrenom,
-					textNom, textMdp, datePicker, statutComboBox, textlieuAttentat, dateAttentatP,  erreur, this);
+					textNom, textMdp, datePicker, statutComboBox,  erreur, this);
 			ajoutController.handle(event);
 		});
 

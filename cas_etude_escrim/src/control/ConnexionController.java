@@ -41,15 +41,7 @@ public class ConnexionController implements EventHandler<ActionEvent> {
         database = new BDD();
     }
 
-    public TextField getTextId() {
-		return textId;
-	}
-
-	public void setTextId(TextField textId) {
-		this.textId = textId;
-	}
-
-	/**
+    /**
      * Méthode de gestion de l'événement de connexion.
      */
     public void handle(ActionEvent e) {
@@ -129,6 +121,9 @@ public class ConnexionController implements EventHandler<ActionEvent> {
         new Thread(pauseTask).start();
     }
     
+    /**
+     * Affiche la vue pour un médecin.
+     */
     public void afficherVueMedecin() {
         Task<Void> pauseTask = new Task<Void>() {
             @Override
@@ -149,8 +144,6 @@ public class ConnexionController implements EventHandler<ActionEvent> {
 
         new Thread(pauseTask).start();
     }
-
-    
 
     /**
      * Affiche la vue pour un logisticien.
