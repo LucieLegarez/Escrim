@@ -83,7 +83,12 @@ public class AjoutUtilisateur extends Stage {
         show();
     }
     
-    private void setupCommonFields(GridPane grid) {
+    /**
+     * Configure les champs communs dans une grille spécifiée.
+     * 
+     * @param grid La grille dans laquelle configurer les champs communs.
+     */
+    public void setupCommonFields(GridPane grid) {
     	prenom.setFont(new Font("Arial", 25.0));
 		textPrenom.setPromptText("Saisir le prénom de l'utilisateur");
 		textPrenom.setFont(Font.font("Arial", FontPosture.ITALIC, 16.0));
@@ -127,8 +132,13 @@ public class AjoutUtilisateur extends Stage {
     }
     
 
-		
-    private void setupBackButton(GridPane grid) {
+    /**
+     * Configure le bouton de retour avec une flèche dans une grille spécifiée.
+     * 
+     * @param grid La grille dans laquelle configurer le bouton de retour.
+     */
+
+    public void setupBackButton(GridPane grid) {
     	ImageView imageView = new ImageView(new Image("file:ressources/flèche.png"));
 		imageView.setFitWidth(30);
 		imageView.setFitHeight(30);
@@ -150,8 +160,13 @@ public class AjoutUtilisateur extends Stage {
 		grid.add(erreur, 0, 8); 
     }
 		
-		
-    private void setupAddButton(GridPane grid) {
+    /**
+     * Configure le bouton d'ajout dans une grille spécifiée.
+     * 
+     * @param grid La grille dans laquelle configurer le bouton d'ajout.
+     */
+	
+    public void setupAddButton(GridPane grid) {
     	boutonAjouter.setFont(new Font("Arial", 25.0));
 		boutonAjouter.setStyle("-fx-background-color: blue; -fx-text-fill: white;");
 		GridPane.setHalignment(this.boutonAjouter, HPos.RIGHT);

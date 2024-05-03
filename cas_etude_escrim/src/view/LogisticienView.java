@@ -1,7 +1,6 @@
 package view;
 
 import java.time.LocalDate;
-import javafx.scene.layout.ColumnConstraints;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,9 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import control.SessionController;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -42,7 +39,7 @@ import model.BDD;
  */
 public class LogisticienView extends Stage {
 
-	private Label errorLabel; // To display error messages
+	private Label errorLabel; 
 	private Stage primaryStage;
 	private final String[] nomsColonnes = { "PRODUIT", "DCI", "DOSAGE", "DLU", "QUANTITÉ", "LOT", "CLASSE",
 			"NUM_CAISSE", "CAISSE" };
@@ -56,7 +53,6 @@ public class LogisticienView extends Stage {
 	private List<String> produit;
 	private List<String> dci;
 	private List<String> dosage;
-	private Label successMessageLabel;
 
 	/**
 	 * Constructeur de la vue du logisticien.
@@ -69,8 +65,8 @@ public class LogisticienView extends Stage {
 		this.produit = new ArrayList<>();
 		this.dci = new ArrayList<>();
 		this.dosage = new ArrayList<>();
-		errorLabel = new Label(); // Initialize the error label
-		errorLabel.setTextFill(Color.RED); // Set error text color
+		errorLabel = new Label(); 
+		errorLabel.setTextFill(Color.RED); 
 	}
 
 	/**
@@ -82,7 +78,6 @@ public class LogisticienView extends Stage {
 		addBackButton(mainPane);
 
 		List<String[]> stocksMedicamentsList = bdd.recupererStocksMedicaments();
-		List<String[]> stocksAvionList = bdd.recupererStocksAvions();
 		Map<String, Integer> stockGrouped = groupStocksByProduct(stocksMedicamentsList);
 		List<String> lowStockMessages = generateLowStockMessages(stockGrouped);
 
@@ -115,6 +110,10 @@ public class LogisticienView extends Stage {
 
 		showScene(mainPane, "Stocks de médicaments");
 	}
+	
+	/**
+	 * Affiche la vue des stocks d'avion.
+	 */
 
 	public void afficheVueStocksAvion() {
 		List<String[]> stocksAvionList = bdd.recupererStocksAvions();
@@ -136,6 +135,19 @@ public class LogisticienView extends Stage {
 		showScene(mainPane, "Stocks d'avions");
 	}
 
+	/**
+	 * Crée une fenêtre contextuelle pour saisir les informations sur un avion.
+	 * Cette méthode affiche une fenêtre modale contenant des champs de saisie et des contrôles pour
+	 * enregistrer les informations sur l'avion, telles que la disponibilité, le nom de l'avion, etc.
+	 * 
+	 * La fenêtre affiche également des messages d'erreur ou de succès en fonction des validations effectuées.
+	 * 
+	 * @see #populateAvionComboBox(ComboBox)
+	 * @see #populateAttentatComboBox(ComboBox)
+	 * @see #validateFieldsAvion(String, String, String, String, Label)
+	 * @see #validateFieldsAviondisp(String, String, String, Label)
+	 */
+	
 	private void createAvionPopUp() {
 		Stage popupStage = new Stage();
 		popupStage.initModality(Modality.APPLICATION_MODAL);
@@ -149,12 +161,10 @@ public class LogisticienView extends Stage {
 		gridPane.setHgap(10);
 		gridPane.setPadding(new Insets(20));
 
-		// Initialize the error label and add it to the grid
 		Label errorLabel = new Label();
-		errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
-		gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns at the top of the grid
+		errorLabel.setTextFill(Color.RED); 
+		gridPane.add(errorLabel, 0, 0, 2, 1); 
 
-		// Initialize the success label but do not add to grid yet
 		Label successLabel = new Label();
 		successLabel.setTextFill(Color.GREEN);
 
@@ -170,12 +180,10 @@ public class LogisticienView extends Stage {
 		gridPane.addRow(1, new Label("Disponibilité avion :"), etatComboBox);
 		gridPane.addRow(2, new Label("Avion :"), avionComboBox);
 
-		// Initially hide attentat ComboBox
 		attentatComboBox.setVisible(false);
 		Label attentatLabel = new Label("Attentat :");
 		attentatLabel.setVisible(false);
 		gridPane.addRow(5, attentatLabel, attentatComboBox);
-		// Listen to changes in etatComboBox selection
 		etatComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
 			if ("occupé".equals(newVal)) {
 				attentatComboBox.setVisible(true);
@@ -205,17 +213,15 @@ public class LogisticienView extends Stage {
 
 			if (validateFieldsAvion(etat, avionUt, etatAvion, infoAttentat, errorLabel)) {
 
-				// Mise à jour de l'avion dans la base de données
 				if (bdd.updateAvion(nomAvion, etat, lieuAttentat, dateAttentat)) {
 					successLabel.setText("Mise à jour de l'avion réussie");
-					gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
-					// Ferme la fenêtre popup après un délai
+					gridPane.add(successLabel, 0, 7, 2, 1); 
 					new Thread(() -> {
 						try {
 							Thread.sleep(2000);
 							Platform.runLater(() -> {
 								popupStage.close();
-								afficheVueLogisticien(); // Rafraîchir la vue logisticien pour refléter la mise à jour
+								afficheVueLogisticien(); 
 							});
 						} catch (InterruptedException ex) {
 							ex.printStackTrace();
@@ -232,17 +238,15 @@ public class LogisticienView extends Stage {
 
 				if (validateFieldsAviondisp(etat, avionUt, etatAvion, errorLabel)) {
 
-					// Mise à jour de l'avion dans la base de données
 					if (bdd.updateAvion(nomAvion, etat, lieuAttentat, dateAttentat)) {
 						successLabel.setText("Mise à jour de l'avion réussie");
-						gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
-						// Ferme la fenêtre popup après un délai
+						gridPane.add(successLabel, 0, 7, 2, 1); 
 						new Thread(() -> {
 							try {
 								Thread.sleep(2000);
 								Platform.runLater(() -> {
 									popupStage.close();
-									afficheVueLogisticien(); // Rafraîchir la vue logisticien pour refléter la mise à jour
+									afficheVueLogisticien(); 
 								});
 							} catch (InterruptedException ex) {
 								ex.printStackTrace();
@@ -255,9 +259,19 @@ public class LogisticienView extends Stage {
 		});
 
 		gridPane.addRow(6, validerButton);
-		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+		popupStage.setScene(new Scene(gridPane, 450, 350)); 
 		popupStage.showAndWait();
 	}
+
+	/**
+	 * Remplit une ComboBox avec les informations sur les attentats récupérées depuis la base de données.
+	 * Cette méthode récupère une liste d'attentats à partir de la base de données et les ajoute à la ComboBox
+	 * au format "lieu ; date", où lieu représente le lieu de l'attentat et date la date de l'attentat.
+	 * 
+	 * @param comboBox La ComboBox à remplir avec les informations sur les attentats.
+	 * 
+	 * @see BaseDeDonnees#recupererListeAttentat()
+	 */
 
 	private void populateAttentatComboBox(ComboBox<String> comboBox) {
 		List<String[]> attentat = bdd.recupererListeAttentat();
@@ -266,6 +280,17 @@ public class LogisticienView extends Stage {
 		}
 	}
 
+	/**
+	 * Remplit une ComboBox avec les informations sur les avions récupérées depuis la base de données.
+	 * Cette méthode récupère une liste d'avions à partir de la base de données et les ajoute à la ComboBox
+	 * au format "nom de l'avion ; état de disponibilité", où le nom de l'avion représente le nom de l'avion
+	 * et l'état de disponibilité représente l'état actuel de l'avion (disponible ou occupé).
+	 * 
+	 * @param comboBox La ComboBox à remplir avec les informations sur les avions.
+	 * 
+	 * @see BaseDeDonnees#recupererStocksAvions()
+	 */
+
 	private void populateAvionComboBox(ComboBox<String> comboBox) {
 		List<String[]> avion = bdd.recupererStocksAvions();
 		for (String[] Avion : avion) {
@@ -273,11 +298,19 @@ public class LogisticienView extends Stage {
 		}
 	}
 
-	// A faire : décompter les médicament utilisés
-	// Synchroniser la fiche du patient(attention à l'id)
-	// bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour
-	// selectionner)
-
+	/**
+	 * Valide les champs relatifs à la saisie des informations sur un avion.
+	 * Cette méthode vérifie si les champs obligatoires sont renseignés correctement.
+	 * 
+	 * @param etat L'état de disponibilité sélectionné pour l'avion.
+	 * @param avionUt Les informations sur l'avion sélectionné.
+	 * @param etatAvion L'état actuel de disponibilité de l'avion.
+	 * @param infoAttentat Les informations sur l'attentat sélectionné, le cas échéant.
+	 * @param errorLabel Le label où afficher les messages d'erreur, le cas échéant.
+	 * 
+	 * @return true si tous les champs sont valides, sinon false.
+	 */
+	
 	public boolean validateFieldsAvion(String etat, String avionUt, String etatAvion, String infoAttentat, Label errorLabel) {
 
 		if (etat == null) {
@@ -301,6 +334,18 @@ public class LogisticienView extends Stage {
 
 		return true;
 	}
+
+	/**
+	 * Valide les champs relatifs à la saisie des informations sur un avion lorsque l'état est disponible.
+	 * Cette méthode vérifie si les champs obligatoires sont renseignés correctement.
+	 * 
+	 * @param etat L'état de disponibilité sélectionné pour l'avion.
+	 * @param avionUt Les informations sur l'avion sélectionné.
+	 * @param etatAvion L'état actuel de disponibilité de l'avion.
+	 * @param errorLabel Le label où afficher les messages d'erreur, le cas échéant.
+	 * 
+	 * @return true si tous les champs sont valides, sinon false.
+	 */
 
 	public boolean validateFieldsAviondisp(String etat, String avionUt, String etatAvion, Label errorLabel) {
 
@@ -341,6 +386,14 @@ public class LogisticienView extends Stage {
 
 		table.setItems(FXCollections.observableArrayList(filteredList));
 	}
+
+	/**
+	 * Filtrer les données de la table des avions en fonction du texte de recherche.
+	 * Cette méthode filtre les données de la table des avions en fonction du texte de recherche spécifié.
+	 * 
+	 * @param searchText Le texte à rechercher dans les données de la table.
+	 * @param table La table des avions à filtrer.
+	 */
 
 	public void filterTableAvion(String searchText, TableView<String[]> table) {
 		if (stocksAvion == null) {
@@ -510,23 +563,19 @@ public class LogisticienView extends Stage {
 			gridPane.setHgap(20);
 			gridPane.setPadding(new Insets(20));
 
-			// Initialize the error label and add it to the grid
 			Label errorLabel = new Label();
-			errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
-			gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns
+			errorLabel.setTextFill(Color.RED);
+			gridPane.add(errorLabel, 0, 0, 2, 1); 
 
-			// Initialize the success label but do not add to grid yet
 			Label successLabel = new Label();
 			successLabel.setTextFill(Color.GREEN);
 
-			// Other UI components
 			DatePicker datePicker = new DatePicker();
 			TextField lotTextField = new TextField();
 			TextField numCaisseTextField = new TextField();
 			TextField caisseTextField = new TextField();
 			TextField classeTextField = new TextField();
 
-			// Add components to the grid
 			gridPane.addRow(1, new Label("Date limite :"), datePicker);
 			gridPane.addRow(2, new Label("Numéro de lot :"), lotTextField);
 			gridPane.addRow(3, new Label("Numéro de caisse :"), numCaisseTextField);
@@ -544,25 +593,22 @@ public class LogisticienView extends Stage {
 				String caisse = caisseTextField.getText();
 
 				if (validerChampsMed(dateLimite, lot, numCaisseStr, classe, caisse, errorLabel)) {
-					int numCaisse = Integer.parseInt(numCaisseStr); // Convert numCaisse here after validation
+					int numCaisse = Integer.parseInt(numCaisseStr); 
 					String produit = this.produit.get(index);
 					String dci = this.dci.get(index);
 					String dosage = this.dosage.get(index);
 
-					// Insert into the database
 					bdd.insererMedicament(produit, dci, dosage, dateLimite, quantity, lot, classe, numCaisse, caisse);
 
-					// Display success message
 					successLabel.setText("Ajout du médicament " + produit + " réussi");
-					gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
+					gridPane.add(successLabel, 0, 7, 2, 1); 
 
-					// Close popup after a delay
 					new Thread(() -> {
 						try {
 							Thread.sleep(2000);
 							Platform.runLater(() -> {
 								popupStage.close();
-								afficheVueLogisticien(); // Refresh the logistician view to reflect the updated stock
+								afficheVueLogisticien(); 
 							});
 						} catch (InterruptedException ex) {
 							ex.printStackTrace();
@@ -572,11 +618,24 @@ public class LogisticienView extends Stage {
 			});
 
 			gridPane.addRow(6, validerButton);
-			popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+			popupStage.setScene(new Scene(gridPane, 450, 350)); 
 			popupStage.showAndWait();
 		});
 		return orderButton;
 	}
+
+	/**
+	 * Valider les champs pour les médicaments.
+	 * Cette méthode vérifie si les champs obligatoires pour les médicaments sont remplis correctement.
+	 * 
+	 * @param dateLimite La date limite du produit.
+	 * @param lot Le numéro de lot du produit.
+	 * @param numCaisseStr Le numéro de caisse du produit sous forme de chaîne.
+	 * @param classe La classe du produit.
+	 * @param caisse Le nom de la caisse du produit.
+	 * @param errorLabel Le label d'erreur où afficher les messages d'erreur.
+	 * @return true si tous les champs sont valides, false sinon.
+	 */
 
 	public boolean validerChampsMed(LocalDate dateLimite, String lot, String numCaisseStr, String classe, String caisse,
 			Label errorLabel) {
@@ -657,8 +716,8 @@ public class LogisticienView extends Stage {
 		visualiserStockAvionButton.setOnAction(event -> {
 			afficheVueStocksAvion();
 		});
-		mainPane.add(visualiserStocksButton, 80, 1); // Keep existing position for one button
-		mainPane.add(renseignementAttentatButton, 80, 3); // Place the second button below the first
+		mainPane.add(visualiserStocksButton, 80, 1);
+		mainPane.add(renseignementAttentatButton, 80, 3); 
 		mainPane.add(visualiserStockAvionButton, 80, 2);
 		mainPane.add(updateStockAvionButton, 80, 4);
 
@@ -673,6 +732,11 @@ public class LogisticienView extends Stage {
 		GridPane.setMargin(updateStockAvionButton, new Insets(1));
 	}
 
+	/**
+	 * Crée une fenêtre contextuelle pour saisir les informations sur un attentat.
+	 * Cette méthode affiche une fenêtre contextuelle modale pour saisir les détails d'un attentat, tels que la date, le lieu, le nombre total de blessés et le nombre à soigner.
+	 */
+
 	private void createAttentatInfoPopup() {
 		Stage popupStage = new Stage();
 		popupStage.initModality(Modality.APPLICATION_MODAL);
@@ -683,22 +747,18 @@ public class LogisticienView extends Stage {
 		gridPane.setHgap(10);
 		gridPane.setPadding(new Insets(20));
 
-		// Initialize the error label and add it to the grid
 		Label errorLabel = new Label();
-		errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
-		gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns at the top of the grid
+		errorLabel.setTextFill(Color.RED); 
+		gridPane.add(errorLabel, 0, 0, 2, 1); 
 
-		// Initialize the success label but do not add to grid yet
 		Label successLabel = new Label();
 		successLabel.setTextFill(Color.GREEN);
 
-		// Other UI components
 		DatePicker dateAttentatTextField = new DatePicker();
 		TextField lieuTextField = new TextField();
 		TextField totBlessesTextField = new TextField();
 		TextField nbAsoignerTextField = new TextField();
 
-		// Add components to the grid
 		gridPane.addRow(1, new Label("Date de l'attentat :"), dateAttentatTextField);
 		gridPane.addRow(2, new Label("Lieu de l'attentat :"), lieuTextField);
 		gridPane.addRow(3, new Label("Total de blessés :"), totBlessesTextField);
@@ -717,20 +777,17 @@ public class LogisticienView extends Stage {
 				int totBlesses = Integer.parseInt(totBlessesStr);
 				int nbAsoigner = Integer.parseInt(nbAsoignerStr);
 
-				// Insert into the database
 				bdd.insererAttentat(lieu, totBlesses, nbAsoigner, dateAttentat);
 
-				// Display success message
 				successLabel.setText("Ajout de l'attentat à " + lieu + " réussi");
-				gridPane.add(successLabel, 0, 6, 2, 1); // Span across both columns
+				gridPane.add(successLabel, 0, 6, 2, 1); 
 
-				// Close popup after a delay
 				new Thread(() -> {
 					try {
 						Thread.sleep(2000);
 						Platform.runLater(() -> {
 							popupStage.close();
-							afficheVueLogisticien(); // Refresh the logistician view to reflect the updated stock
+							afficheVueLogisticien(); 
 						});
 					} catch (InterruptedException ex) {
 						ex.printStackTrace();
@@ -740,9 +797,21 @@ public class LogisticienView extends Stage {
 		});
 
 		gridPane.addRow(5, validerButton);
-		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+		popupStage.setScene(new Scene(gridPane, 450, 350)); 
 		popupStage.showAndWait();
 	}
+
+	/**
+	 * Valide les champs saisis pour un attentat.
+	 * Cette méthode vérifie si les champs requis pour un attentat sont correctement saisis.
+	 *
+	 * @param date          La date de l'attentat.
+	 * @param lieu          Le lieu de l'attentat.
+	 * @param totalBlessesStr   Le nombre total de blessés.
+	 * @param toTreatStr    Le nombre à soigner.
+	 * @param errorLabel    Le label où afficher les messages d'erreur le cas échéant.
+	 * @return              True si les champs sont valides, false sinon.
+	 */
 
 	public boolean validateFields(LocalDate date, String lieu, String totalBlessesStr, String toTreatStr,
 			Label errorLabel) {
@@ -819,6 +888,13 @@ public class LogisticienView extends Stage {
 		return table;
 	}
 
+	/**
+	 * Crée une TableView pour afficher les informations des avions.
+	 * Cette méthode crée une TableView avec les colonnes appropriées pour afficher les informations des avions.
+	 *
+	 * @return              La TableView créée pour afficher les informations des avions.
+	 */
+	
 	public TableView<String[]> createTableViewAvion() {
 		TableView<String[]> table = new TableView<>();
 		for (int i = 0; i < 17; i++) {
@@ -856,6 +932,14 @@ public class LogisticienView extends Stage {
 		});
 		return searchField;
 	}
+
+	/**
+	 * Crée un champ de recherche pour filtrer les données dans une TableView d'avions.
+	 * Cette méthode crée un champ de texte où l'utilisateur peut saisir du texte pour filtrer les données affichées dans une TableView d'avions.
+	 *
+	 * @param table         La TableView d'avions à filtrer.
+	 * @return              Le champ de recherche créé.
+	 */
 
 	public TextField createSearchFieldAvion(TableView<String[]> table) {
 		TextField searchField = new TextField();

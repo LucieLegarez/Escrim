@@ -519,5 +519,28 @@ public class BDD {
 	    return prescriptions;
 	}
 
-	
+	/**
+	 * Vérifie si une prescription existe pour un patient donné.
+	 * 
+	 * @param prenom Le prénom du patient.
+	 * @param nom    Le nom du patient.
+	 * @return true si une prescription existe pour le patient spécifié, sinon false.
+	 */
+
+	public boolean prescriptionExiste(String prenom, String nom) {
+	    try {
+	        PreparedStatement statement = dbConnection.prepareStatement(
+	            "SELECT COUNT(*) FROM prescription WHERE PRéNOM = ? AND NOM = ?");
+	        statement.setString(1, prenom);
+	        statement.setString(2, nom);
+	        ResultSet resultSet = statement.executeQuery();
+	        resultSet.next();
+	        int count = resultSet.getInt(1);
+	        return count > 0;
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
+
 }

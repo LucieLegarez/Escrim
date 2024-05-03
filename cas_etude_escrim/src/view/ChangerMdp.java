@@ -30,7 +30,6 @@ public class ChangerMdp extends Stage {
 	private Label mdp;
 	private Label erreur;
 	private Button boutonChangerMdp;
-	private Stage primaryStage;
 	private Connexion connexion;
 
 	/**
@@ -40,10 +39,7 @@ public class ChangerMdp extends Stage {
 	 * @param connexion
 	 */
 	public ChangerMdp(Stage primaryStage, Connexion connexion) {
-		this.primaryStage = primaryStage;
 		this.connexion = connexion;
-
-		// Initialisation des composants
 		textIdentifiant = new TextField();
 		textDateNaissance = new DatePicker();
 		textMdp = new TextField();
@@ -67,17 +63,14 @@ public class ChangerMdp extends Stage {
 		grid.setVgap(20.0);
 		grid.setHgap(30.0);
 
-		// Ajout des composants au GridPane
 		addComponentsToGrid(grid);
 
-		// Gestionnaire d'événement du bouton de changement de mot de passe
 		boutonChangerMdp.setOnAction((event) -> {
 			ChangerMdpController changerController = new ChangerMdpController(textIdentifiant, textDateNaissance,
 					textMdp, erreur, this);
 			changerController.handle(event);
 		});
 
-		// Bouton de retour
 		addBackButtonToGrid(grid);
 
 		Scene scene = new Scene(grid);

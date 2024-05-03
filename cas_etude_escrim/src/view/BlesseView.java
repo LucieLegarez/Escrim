@@ -1,7 +1,6 @@
 package view;
 
 import java.sql.Date;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -90,26 +89,26 @@ public class BlesseView extends Stage {
         ficheRenseignement.setStyle("-fx-underline: true;");
         GridPane.setMargin(infosPane, new Insets(50, 0, 200, 0));
         
-        infosPane.add(ficheRenseignement, 0, 0, 2, 1); // Spanning two columns
+        infosPane.add(ficheRenseignement, 0, 0, 2, 1); 
 
         ImageView imagePersonne = new ImageView(new Image("file:ressources/personne.png"));
         imagePersonne.setFitWidth(100);
         imagePersonne.setFitHeight(100);
         GridPane.setColumnSpan(imagePersonne, GridPane.REMAINING);
         GridPane.setHalignment(imagePersonne, HPos.CENTER);
-        infosPane.add(imagePersonne, 0, 1, 2, 1); // Spanning two columns
+        infosPane.add(imagePersonne, 0, 1, 2, 1); 
 
         Label prenomLabel = new Label("Prénom : " + prenom);
         prenomLabel.setFont(Font.font("Arial", 15));
-        infosPane.add(prenomLabel, 0, 2, 2, 1); // Spanning two columns
+        infosPane.add(prenomLabel, 0, 2, 2, 1); 
 
         Label nomLabel = new Label("Nom : " + nom);
         nomLabel.setFont(Font.font("Arial", 15));
-        infosPane.add(nomLabel, 0, 3, 2, 1); // Spanning two columns
+        infosPane.add(nomLabel, 0, 3, 2, 1); 
 
         Label dateNaissanceLabel = new Label("Date de naissance : " + dateNaissanceFormatted);
         dateNaissanceLabel.setFont(Font.font("Arial", 15));
-        infosPane.add(dateNaissanceLabel, 0, 4, 2, 1); // Spanning two columns
+        infosPane.add(dateNaissanceLabel, 0, 4, 2, 1); 
 
         return infosPane;
     }
@@ -151,9 +150,9 @@ public class BlesseView extends Stage {
             
             Label presLabel = new Label("Date: " + date.strip() + "\nMédecin: " + medecin.strip()  + "\nMédicament: " + médicament.strip()  + "\nQuantité: " + quantite.strip()  + "\nLieu: " + lieu.strip()  + "\nDate Attentat: " + dateAttentat.strip() );
             presLabel.setFont(Font.font("Arial", 14));
-            presLabel.setWrapText(true); // Enable text wrapping within the label
-            presLabel.setMaxWidth(550); // Set the maximum width for the label
-            patientPane.add(presLabel, 0, prescriptions.indexOf(pres)+4, 1, 1); // Add label to the grid
+            presLabel.setWrapText(true); 
+            presLabel.setMaxWidth(550);
+            patientPane.add(presLabel, 0, prescriptions.indexOf(pres)+4, 1, 1);
         }
 
         return patientPane;

@@ -2,7 +2,6 @@ package view;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,7 +10,6 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -24,7 +22,6 @@ import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -48,10 +45,7 @@ public class MedecinView extends Stage {
 	private final BDD bdd;
 	private ObservableList<String[]> listeAttentats;
 	private ObservableList<String[]> prescriptionList;
-	private List<String> lieu;
-	private List<String> tot_blesses;
-	private List<String> Pers_à_soigner;
-	private Label successMessageLabel;
+	
 	private final BlesseView BV;
 	
 	/**
@@ -63,9 +57,7 @@ public class MedecinView extends Stage {
 		this.primaryStage = primaryStage;
 		this.bdd = new BDD();
 		this.BV = new BlesseView(primaryStage);
-		this.lieu = new ArrayList<>();
-		this.tot_blesses = new ArrayList<>();
-		this.Pers_à_soigner = new ArrayList<>();
+		
 		errorLabel = new Label(); // Initialize the error label
 		errorLabel.setTextFill(Color.RED); // Set error text color
 
@@ -85,10 +77,9 @@ public class MedecinView extends Stage {
 
 		addButton(mainPane);
 
-		// Ajout du titre et du panneau de boutons au GridPane
-		mainPane.add(titleLabel, 0, 5); // Ajout du titre en première ligne
+		mainPane.add(titleLabel, 0, 5); 
 		GridPane.setHalignment(titleLabel, HPos.CENTER);
-		GridPane.setMargin(titleLabel, new Insets(0, 0, 0, 0)); // Espacement autour du titre
+		GridPane.setMargin(titleLabel, new Insets(0, 0, 0, 0)); 
 		ImageView imageMedicament = new ImageView(new Image("file:ressources/Medicaments.png"));
 		imageMedicament.setFitWidth(200);
 		imageMedicament.setFitHeight(200);
@@ -120,6 +111,13 @@ public class MedecinView extends Stage {
 
 		showScene(mainPane, "Liste des Attentats");
 	}
+
+	/**
+	 * Affiche la vue de la liste des prescriptions.
+	 * Cette méthode récupère la liste des prescriptions depuis la base de données, crée une TableView pour afficher ces prescriptions,
+	 * crée un champ de recherche pour filtrer les prescriptions affichées, crée un bouton de retour, et affiche le tout dans une grille.
+	 * La vue est centrée sur la scène.
+	 */
 
 	public void afficheVueListesPrescriptions() {
 		List<String[]> PrescriptionList = bdd.recupererListePrescription();
@@ -166,6 +164,16 @@ public class MedecinView extends Stage {
 		table.setItems(FXCollections.observableArrayList(filteredList));
 	}
 	
+	/**
+	 * Filtrer la TableView des prescriptions en fonction du texte de recherche.
+	 * Si la liste des prescriptions est null ou si le texte de recherche est vide, affiche toutes les prescriptions.
+	 * Sinon, filtre les prescriptions dont le prénom du patient contient le texte de recherche (ignorant la casse).
+	 * Met à jour la TableView avec la liste filtrée.
+	 *
+	 * @param searchText Le texte à rechercher dans les prescriptions.
+	 * @param table      La TableView des prescriptions à filtrer.
+	 */
+
 	public void filterTablePres(String searchText, TableView<String[]> table) {
 		if (prescriptionList == null) {
 			return;
@@ -264,8 +272,6 @@ public class MedecinView extends Stage {
 		Button renseignementPatientButton = new Button("Créer Prescription");
 		Button visualiserPrescriptionButton = new Button("Consulter Prescription");
 
-		// Définition de la taille et du style des boutons
-		 // Taille des boutons pour être carrés
 		visualiserAttentatButton.setPrefWidth(350);
 		visualiserAttentatButton.setPrefHeight(150);
 		renseignementPatientButton.setPrefWidth(350);
@@ -273,20 +279,20 @@ public class MedecinView extends Stage {
 		visualiserPrescriptionButton.setPrefWidth(350);
 		visualiserPrescriptionButton.setPrefHeight(150);
 
-		// Application de styles supplémentaires si nécessaire
+		
 		visualiserAttentatButton.setStyle(" -fx-font-size: 14pt; -fx-background-radius: 5; -fx-padding: 20;");
 		renseignementPatientButton.setStyle("-fx-font-size: 14pt; -fx-background-radius: 5; -fx-padding: 20;");
 		visualiserPrescriptionButton.setStyle("-fx-font-size: 14pt; -fx-background-radius: 5; -fx-padding: 20;");
 
-		// Utilisation d'une VBox pour aligner verticalement les boutons au centre
-		VBox buttonBox = new VBox(10); // Espacement entre les boutons
-		buttonBox.setAlignment(Pos.CENTER); // Centre les éléments dans la VBox
+		
+		VBox buttonBox = new VBox(10); 
+		buttonBox.setAlignment(Pos.CENTER); 
 		buttonBox.getChildren().addAll(visualiserAttentatButton, renseignementPatientButton, visualiserPrescriptionButton);
 
-		// Ajoute la VBox au GridPane en s'assurant qu'elle est centrée
-		mainPane.add(buttonBox, 0, 15); // Colonne 0, Ligne 1
-		GridPane.setHalignment(buttonBox, HPos.CENTER); // Centre horizontalement dans la grille
-		GridPane.setValignment(buttonBox, VPos.CENTER); // Centre horizontalement dans la grille
+		
+		mainPane.add(buttonBox, 0, 15);
+		GridPane.setHalignment(buttonBox, HPos.CENTER); 
+		GridPane.setValignment(buttonBox, VPos.CENTER);
 
 		visualiserAttentatButton.setOnAction(event -> {
 			afficheVueListesAttentats();
@@ -301,7 +307,16 @@ public class MedecinView extends Stage {
 
 	}
 
-	private void createPrescriptionPopUp() {
+	/**
+	 * Crée une fenêtre modale pour saisir les informations de prescription pour un patient.
+	 * La fenêtre affiche des champs pour le prénom du patient, le nom du patient, le médicament prescrit,
+	 * la quantité, et un menu déroulant pour sélectionner un attentat.
+	 * L'utilisateur peut valider les informations saisies, ce qui les enregistre dans la base de données.
+	 * Si la validation réussit, un message de succès est affiché et la vue du médecin est actualisée.
+	 * En cas d'échec de validation, un message d'erreur approprié est affiché.
+	 */
+
+	public void createPrescriptionPopUp() {
 		Stage popupStage = new Stage();
 		popupStage.initModality(Modality.APPLICATION_MODAL);
 		Label titleLabel = new Label("Information prescription");
@@ -314,16 +329,13 @@ public class MedecinView extends Stage {
 		gridPane.setHgap(10);
 		gridPane.setPadding(new Insets(20));
 
-		// Initialize the error label and add it to the grid
 		Label errorLabel = new Label();
-		errorLabel.setTextFill(Color.RED); // Set the text color to red for visibility
-		gridPane.add(errorLabel, 0, 0, 2, 1); // Span across two columns at the top of the grid
+		errorLabel.setTextFill(Color.RED); 
+		gridPane.add(errorLabel, 0, 0, 2, 1); 
 
-		// Initialize the success label but do not add to grid yet
 		Label successLabel = new Label();
 		successLabel.setTextFill(Color.GREEN);
 
-		// Other UI components
 		TextField prenomTextField = new TextField();
 		TextField nomTextField = new TextField();
 		
@@ -336,7 +348,6 @@ public class MedecinView extends Stage {
 	    populateAttentatComboBox(AttentatComboBox);
 	    
 		
-		// Add components to the grid
 		gridPane.addRow(1, new Label("Prénom patient :"), prenomTextField);
 		gridPane.addRow(2, new Label("Nom patient :"), nomTextField);
 		gridPane.addRow(3, new Label("Médicament prescrit :"), medicamentComboBox);
@@ -359,53 +370,72 @@ public class MedecinView extends Stage {
 			if (validateFields(pnomEnMinuscule, nomEnMinuscules, medPrescrit, quantite, infoAttentat, errorLabel)) {
 				
 				String id_med = SessionController.getInstance().getUserId();
-				// Insert into the database
 				String result = bdd.insererPrescription(pnomEnMinuscule, nomEnMinuscules, medPrescrit, quantite, id_med, infoAttentat);
 				if ("Success".equals(result)) {
-				// Display success message
 					BV.afficherPrescriptions(pnom, nom);
 				successLabel.setText("Ajout de la prescription de " + pnom +" "+ nom + " réussi");
-				gridPane.add(successLabel, 0, 7, 2, 1); // Span across both columns
-				// Close popup after a delay
+				gridPane.add(successLabel, 0, 7, 2, 1); 
 				new Thread(() -> {
 					try {
 						Thread.sleep(2000);
 						Platform.runLater(() -> {
 							popupStage.close();
-							afficheVueMedecin(); // Refresh the logistician view to reflect the updated stock
+							afficheVueMedecin(); 
 						});
 					} catch (InterruptedException ex) {
 						ex.printStackTrace();
 					}
 				}).start();
 			}else {
-			    errorLabel.setText(result); // Cela affichera le message de stock insuffisant ou toute autre erreur
+			    errorLabel.setText(result); 
 			}} 
 				
 		});
 
 		gridPane.addRow(6, validerButton);
-		popupStage.setScene(new Scene(gridPane, 450, 350)); // Adjust the scene size if necessary
+		popupStage.setScene(new Scene(gridPane, 450, 350)); 
 		popupStage.showAndWait();
 	}
 	
-	private void populateMedicamentComboBox(ComboBox<String> comboBox) {
+	/**
+	 * Remplit un menu déroulant (ComboBox) avec les médicaments récupérés depuis la base de données.
+	 * Chaque élément du menu déroulant est composé du nom du médicament, de sa forme et de son dosage.
+	 *
+	 * @param comboBox Le menu déroulant à remplir avec les médicaments.
+	 */
+
+	public void populateMedicamentComboBox(ComboBox<String> comboBox) {
 	    List<String[]> medicaments = bdd.recupererStocksMedicaments();
 	    for (String[] medicament : medicaments) {
 	        comboBox.getItems().add(medicament[0].trim() + " ; " + medicament[2].trim() + " ; " + medicament[3].trim());
 	    }
 	}
 
-	private void populateAttentatComboBox(ComboBox<String> comboBox) {
+	/**
+	 * Remplit un menu déroulant (ComboBox) avec les informations sur les attentats récupérées depuis la base de données.
+	 * Chaque élément du menu déroulant est composé du lieu et de la date de l'attentat.
+	 *
+	 * @param comboBox Le menu déroulant à remplir avec les informations sur les attentats.
+	 */
+
+	public void populateAttentatComboBox(ComboBox<String> comboBox) {
 	    List<String[]> attentat = bdd.recupererListeAttentat();
 	    for (String[] Attentat : attentat) {
 	        comboBox.getItems().add(Attentat[0].trim() + " ; " + Attentat[3].trim() );
 	    }
 	}
 
-	// A faire : décompter les médicament utilisés
-	//			Synchroniser la fiche du patient(attention à l'id)
-	//			bonus (pouvoir prescrire plusieurs medicament/ pouvoir ecrire pour selectionner)
+	/**
+	 * Valide les champs nécessaires pour l'ajout d'une prescription pour un patient.
+	 * 
+	 * @param pnom         Le prénom du patient.
+	 * @param nom          Le nom du patient.
+	 * @param medPrescrit  Le médicament prescrit.
+	 * @param quantite     La quantité de médicament prescrit.
+	 * @param infoAttentat Les informations sur l'attentat associé à la prescription.
+	 * @param errorLabel   Le label où afficher les messages d'erreur.
+	 * @return true si tous les champs sont valides, false sinon.
+	 */
 
 	public boolean validateFields(String pnom, String nom, String medPrescrit, int quantite, String infoAttentat,
 			 Label errorLabel) {
@@ -482,6 +512,12 @@ public class MedecinView extends Stage {
 		return table;
 	}
 	
+	/**
+	 * Crée et configure une TableView pour afficher les informations des prescriptions.
+	 * 
+	 * @return La TableView configurée pour afficher les informations des prescriptions.
+	 */
+
 	public TableView<String[]> createTableViewPres() {
 		TableView<String[]> table = new TableView<>();
 		for (int i = 0; i < 8; i++) {
@@ -522,7 +558,13 @@ public class MedecinView extends Stage {
 		return searchField;
 	}
 	
-	
+	/**
+	 * Crée et configure un champ de recherche permettant de filtrer les prescriptions dans la TableView associée.
+	 * 
+	 * @param table La TableView à filtrer.
+	 * @return Le champ de recherche configuré pour filtrer les prescriptions.
+	 */
+
 	public TextField createSearchFieldPres(TableView<String[]> table) {
 		TextField searchField = new TextField();
 		searchField.setPromptText("Rechercher une prescription par nom");
